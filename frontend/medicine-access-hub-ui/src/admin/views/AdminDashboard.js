@@ -103,7 +103,6 @@ function MasterDataTab() {
               <th className="text-left font-medium px-4 py-3">Form</th>
               <th className="text-left font-medium px-4 py-3">Manufacturer</th>
               <th className="text-left font-medium px-4 py-3">MRP</th>
-              <th className="text-left font-medium px-4 py-3">Rx</th>
             </tr>
           </thead>
           <tbody>
@@ -115,9 +114,6 @@ function MasterDataTab() {
                 <td className="px-4 py-3 text-ink-soft">{m.form}</td>
                 <td className="px-4 py-3 text-ink-soft">{m.manufacturer}</td>
                 <td className="px-4 py-3 text-ink-soft">₹{m.mrp}</td>
-                <td className="px-4 py-3">
-                  {m.rxRequired ? <Badge variant="warning"><ShieldAlert size={11} /> Rx</Badge> : <Badge variant="neutral">OTC</Badge>}
-                </td>
               </tr>
             ))}
           </tbody>

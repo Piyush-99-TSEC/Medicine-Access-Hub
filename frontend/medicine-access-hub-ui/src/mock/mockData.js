@@ -4,7 +4,9 @@
 // Coordinates are centred on a sample locality (Pune, India) for realism.
 // ---------------------------------------------------------------------------
 
-export const USER_LOCATION = { lat: 18.5204, lng: 73.8567 };
+// export const USER_LOCATION = { lat: 18.5204, lng: 73.8567 };
+export const USER_LOCATION = { lat: 19.2170, lng: 73.1420 };
+
 
 export const ROLES = {
   PATIENT: 'PATIENT',
@@ -13,16 +15,16 @@ export const ROLES = {
 };
 
 export const DEMO_USERS = {
-  PATIENT: { name: 'Ananya Rao', email: 'patient@demo.in', role: ROLES.PATIENT },
-  PHARMACY_OWNER: { name: 'Vikram Deshmukh', email: 'pharmacy@demo.in', role: ROLES.PHARMACY_OWNER, pharmacyId: 'ph_1' },
-  ADMIN: { name: 'Dr. Anjali Malviya', email: 'admin@demo.in', role: ROLES.ADMIN }
+  PATIENT: { name: 'Patient', email: 'patient@demo.in', role: ROLES.PATIENT },
+  PHARMACY_OWNER: { name: 'Pharmacy', email: 'pharmacy@demo.in', role: ROLES.PHARMACY_OWNER, pharmacyId: 'ph_1' },
+  ADMIN: { name: 'Admin', email: 'admin@demo.in', role: ROLES.ADMIN }
 };
 
 // Credential-based login table for demo authentication.
 export const MOCK_USERS = [
-  { email: 'patient@demo.in', password: 'patient123', role: ROLES.PATIENT, name: 'Ananya Rao' },
-  { email: 'pharmacy@demo.in', password: 'pharmacy123', role: ROLES.PHARMACY_OWNER, name: 'Vikram Deshmukh', pharmacyId: 'ph_1' },
-  { email: 'admin@demo.in', password: 'admin123', role: ROLES.ADMIN, name: 'Dr. Anjali Malviya' }
+  { email: 'patient@demo.in', password: 'patient123', role: ROLES.PATIENT, name: 'patient' },
+  { email: 'pharmacy@demo.in', password: 'pharmacy123', role: ROLES.PHARMACY_OWNER, name: 'pharmacy', pharmacyId: 'ph_1' },
+  { email: 'admin@demo.in', password: 'admin123', role: ROLES.ADMIN, name: 'Admin' }
 ];
 
 export function authenticate(email, password) {
@@ -36,18 +38,18 @@ export function authenticate(email, password) {
 // Medicine Master Table
 // ---------------------------------------------------------------------------
 export const MEDICINES = [
-  { id: 'med_1', brand: 'Crocin 650', generic: 'Paracetamol', salt: 'Paracetamol', strength: '650mg', form: 'Tablet', manufacturer: 'GSK', rxRequired: false, mrp: 32 },
-  { id: 'med_2', brand: 'Dolo 650', generic: 'Paracetamol', salt: 'Paracetamol', strength: '650mg', form: 'Tablet', manufacturer: 'Micro Labs', rxRequired: false, mrp: 30 },
-  { id: 'med_3', brand: 'Calpol 500', generic: 'Paracetamol', salt: 'Paracetamol', strength: '500mg', form: 'Tablet', manufacturer: 'GSK', rxRequired: false, mrp: 22 },
-  { id: 'med_4', brand: 'Telma 40', generic: 'Telmisartan', salt: 'Telmisartan', strength: '40mg', form: 'Tablet', manufacturer: 'Glenmark', rxRequired: true, mrp: 118 },
-  { id: 'med_5', brand: 'Telsartan 40', generic: 'Telmisartan', salt: 'Telmisartan', strength: '40mg', form: 'Tablet', manufacturer: 'Torrent', rxRequired: true, mrp: 96 },
-  { id: 'med_6', brand: 'Augmentin 625', generic: 'Amoxicillin + Clavulanate', salt: 'Amoxicillin + Clavulanate', strength: '625mg', form: 'Tablet', manufacturer: 'GSK', rxRequired: true, mrp: 210 },
-  { id: 'med_7', brand: 'Clavam 625', generic: 'Amoxicillin + Clavulanate', salt: 'Amoxicillin + Clavulanate', strength: '625mg', form: 'Tablet', manufacturer: 'Alkem', rxRequired: true, mrp: 165 },
-  { id: 'med_8', brand: 'Metformin 500', generic: 'Metformin', salt: 'Metformin HCl', strength: '500mg', form: 'Tablet', manufacturer: 'USV', rxRequired: true, mrp: 45 },
-  { id: 'med_9', brand: 'Glycomet 500', generic: 'Metformin', salt: 'Metformin HCl', strength: '500mg', form: 'Tablet', manufacturer: 'USV', rxRequired: true, mrp: 38 },
-  { id: 'med_10', brand: 'Azithral 500', generic: 'Azithromycin', salt: 'Azithromycin', strength: '500mg', form: 'Tablet', manufacturer: 'Alembic', rxRequired: true, mrp: 132 },
-  { id: 'med_11', brand: 'Pantocid 40', generic: 'Pantoprazole', salt: 'Pantoprazole', strength: '40mg', form: 'Tablet', manufacturer: 'Sun Pharma', rxRequired: false, mrp: 88 },
-  { id: 'med_12', brand: 'Cetirizine 10', generic: 'Cetirizine', salt: 'Cetirizine HCl', strength: '10mg', form: 'Tablet', manufacturer: 'Cipla', rxRequired: false, mrp: 18 }
+  { id: 'med_1', brand: 'Crocin 650', generic: 'Paracetamol', salt: 'Paracetamol', strength: '650mg', form: 'Tablet', manufacturer: 'GSK',  mrp: 32 },
+  { id: 'med_2', brand: 'Dolo 650', generic: 'Paracetamol', salt: 'Paracetamol', strength: '650mg', form: 'Tablet', manufacturer: 'Micro Labs',  mrp: 30 },
+  { id: 'med_3', brand: 'Calpol 500', generic: 'Paracetamol', salt: 'Paracetamol', strength: '500mg', form: 'Tablet', manufacturer: 'GSK',  mrp: 22 },
+  { id: 'med_4', brand: 'Telma 40', generic: 'Telmisartan', salt: 'Telmisartan', strength: '40mg', form: 'Tablet', manufacturer: 'Glenmark', mrp: 118 },
+  { id: 'med_5', brand: 'Telsartan 40', generic: 'Telmisartan', salt: 'Telmisartan', strength: '40mg', form: 'Tablet', manufacturer: 'Torrent', mrp: 96 },
+  { id: 'med_6', brand: 'Augmentin 625', generic: 'Amoxicillin + Clavulanate', salt: 'Amoxicillin + Clavulanate', strength: '625mg', form: 'Tablet', manufacturer: 'GSK', mrp: 210 },
+  { id: 'med_7', brand: 'Clavam 625', generic: 'Amoxicillin + Clavulanate', salt: 'Amoxicillin + Clavulanate', strength: '625mg', form: 'Tablet', manufacturer: 'Alkem', mrp: 165 },
+  { id: 'med_8', brand: 'Metformin 500', generic: 'Metformin', salt: 'Metformin HCl', strength: '500mg', form: 'Tablet', manufacturer: 'USV', mrp: 45 },
+  { id: 'med_9', brand: 'Glycomet 500', generic: 'Metformin', salt: 'Metformin HCl', strength: '500mg', form: 'Tablet', manufacturer: 'USV', mrp: 38 },
+  { id: 'med_10', brand: 'Azithral 500', generic: 'Azithromycin', salt: 'Azithromycin', strength: '500mg', form: 'Tablet', manufacturer: 'Alembic', mrp: 132 },
+  { id: 'med_11', brand: 'Pantocid 40', generic: 'Pantoprazole', salt: 'Pantoprazole', strength: '40mg', form: 'Tablet', manufacturer: 'Sun Pharma',  mrp: 88 },
+  { id: 'med_12', brand: 'Cetirizine 10', generic: 'Cetirizine', salt: 'Cetirizine HCl', strength: '10mg', form: 'Tablet', manufacturer: 'Cipla',  mrp: 18 }
 ];
 
 // Substitutes: same salt + same strength + same form (safety hard filter)
@@ -62,15 +64,25 @@ export function getSubstitutes(medicineId) {
 // ---------------------------------------------------------------------------
 // Pharmacies (with spatial coordinates near USER_LOCATION)
 // ---------------------------------------------------------------------------
+// export const PHARMACIES = [
+//   { id: 'ph_1', name: 'Wellness Plus Pharmacy', licenceNo: 'MH-PH-11029', address: 'FC Road, Shivajinagar', lat: 18.5236, lng: 73.8478, rating: 4.6, isVerified: true, openTime: '08:00', closeTime: '22:30', ownerId: 'owner_1', contact: '+91 98220 11234' },
+//   { id: 'ph_2', name: 'CarePoint Medicos', licenceNo: 'MH-PH-11077', address: 'JM Road, Deccan Gymkhana', lat: 18.5158, lng: 73.8412, rating: 4.2, isVerified: true, openTime: '07:30', closeTime: '23:00', ownerId: 'owner_2', contact: '+91 98230 55621' },
+//   { id: 'ph_3', name: 'Sanjeevani Medical Store', licenceNo: 'MH-PH-10932', address: 'Karve Road, Kothrud', lat: 18.5074, lng: 73.8077, rating: 3.9, isVerified: true, openTime: '09:00', closeTime: '21:00', ownerId: 'owner_3', contact: '+91 99870 43221' },
+//   { id: 'ph_4', name: 'Apollo Neighbourhood Pharmacy', licenceNo: 'MH-PH-11501', address: 'Camp, Pune', lat: 18.5122, lng: 73.8797, rating: 4.7, isVerified: true, openTime: '00:00', closeTime: '23:59', ownerId: 'owner_4', contact: '+91 98765 22110' },
+//   { id: 'ph_5', name: 'MedLife Corner Store', licenceNo: 'MH-PH-11890', address: 'Aundh Main Road', lat: 18.5590, lng: 73.8078, rating: 4.0, isVerified: false, openTime: '08:00', closeTime: '21:30', ownerId: 'owner_5', contact: '+91 90210 33445' },
+//   { id: 'ph_6', name: 'Shree Ganesh Pharma', licenceNo: 'MH-PH-10711', address: 'Swargate Chowk', lat: 18.5008, lng: 73.8636, rating: 3.6, isVerified: true, openTime: '08:30', closeTime: '22:00', ownerId: 'owner_6', contact: '+91 91234 77889' },
+//   { id: 'ph_7', name: 'Vitality Health Chemist', licenceNo: 'MH-PH-11345', address: 'Viman Nagar', lat: 18.5679, lng: 73.9143, rating: 4.4, isVerified: true, openTime: '09:00', closeTime: '22:00', ownerId: 'owner_7', contact: '+91 90112 65534' },
+//   { id: 'ph_8', name: 'City Central Medicals', licenceNo: 'MH-PH-11623', address: 'Bund Garden Road', lat: 18.5362, lng: 73.8823, rating: 4.1, isVerified: true, openTime: '08:00', closeTime: '22:00', ownerId: 'owner_8', contact: '+91 99225 11009' }
+// ];
 export const PHARMACIES = [
-  { id: 'ph_1', name: 'Wellness Plus Pharmacy', licenceNo: 'MH-PH-11029', address: 'FC Road, Shivajinagar', lat: 18.5236, lng: 73.8478, rating: 4.6, isVerified: true, openTime: '08:00', closeTime: '22:30', ownerId: 'owner_1', contact: '+91 98220 11234' },
-  { id: 'ph_2', name: 'CarePoint Medicos', licenceNo: 'MH-PH-11077', address: 'JM Road, Deccan Gymkhana', lat: 18.5158, lng: 73.8412, rating: 4.2, isVerified: true, openTime: '07:30', closeTime: '23:00', ownerId: 'owner_2', contact: '+91 98230 55621' },
-  { id: 'ph_3', name: 'Sanjeevani Medical Store', licenceNo: 'MH-PH-10932', address: 'Karve Road, Kothrud', lat: 18.5074, lng: 73.8077, rating: 3.9, isVerified: true, openTime: '09:00', closeTime: '21:00', ownerId: 'owner_3', contact: '+91 99870 43221' },
-  { id: 'ph_4', name: 'Apollo Neighbourhood Pharmacy', licenceNo: 'MH-PH-11501', address: 'Camp, Pune', lat: 18.5122, lng: 73.8797, rating: 4.7, isVerified: true, openTime: '00:00', closeTime: '23:59', ownerId: 'owner_4', contact: '+91 98765 22110' },
-  { id: 'ph_5', name: 'MedLife Corner Store', licenceNo: 'MH-PH-11890', address: 'Aundh Main Road', lat: 18.5590, lng: 73.8078, rating: 4.0, isVerified: false, openTime: '08:00', closeTime: '21:30', ownerId: 'owner_5', contact: '+91 90210 33445' },
-  { id: 'ph_6', name: 'Shree Ganesh Pharma', licenceNo: 'MH-PH-10711', address: 'Swargate Chowk', lat: 18.5008, lng: 73.8636, rating: 3.6, isVerified: true, openTime: '08:30', closeTime: '22:00', ownerId: 'owner_6', contact: '+91 91234 77889' },
-  { id: 'ph_7', name: 'Vitality Health Chemist', licenceNo: 'MH-PH-11345', address: 'Viman Nagar', lat: 18.5679, lng: 73.9143, rating: 4.4, isVerified: true, openTime: '09:00', closeTime: '22:00', ownerId: 'owner_7', contact: '+91 90112 65534' },
-  { id: 'ph_8', name: 'City Central Medicals', licenceNo: 'MH-PH-11623', address: 'Bund Garden Road', lat: 18.5362, lng: 73.8823, rating: 4.1, isVerified: true, openTime: '08:00', closeTime: '22:00', ownerId: 'owner_8', contact: '+91 99225 11009' }
+  { id: 'ph_1', name: 'Wellness Plus Pharmacy', licenceNo: 'MH-PH-11029', address: 'Central Hospital Road, Camp 3', lat: 19.2183, lng: 73.1382, rating: 4.6, isVerified: true, openTime: '08:00', closeTime: '22:30', ownerId: 'owner_1', contact: '+91 98220 11234' },
+  { id: 'ph_2', name: 'CarePoint Medicos', licenceNo: 'MH-PH-11077', address: 'Netaji Chowk, Camp 1', lat: 19.2295, lng: 73.1445, rating: 4.2, isVerified: true, openTime: '07:30', closeTime: '23:00', ownerId: 'owner_2', contact: '+91 98230 55621' },
+  { id: 'ph_3', name: 'Sanjeevani Medical Store', licenceNo: 'MH-PH-10932', address: 'Kalyan-Ambernath Road, Camp 4', lat: 19.2140, lng: 73.1520, rating: 3.9, isVerified: true, openTime: '09:00', closeTime: '21:00', ownerId: 'owner_3', contact: '+91 99870 43221' },
+  { id: 'ph_4', name: 'Lifeline 24x7 Pharmacy', licenceNo: 'MH-PH-11501', address: 'Station Road, Camp 3', lat: 19.2172, lng: 73.1500, rating: 4.7, isVerified: true, openTime: '00:00', closeTime: '23:59', ownerId: 'owner_4', contact: '+91 98765 22110' },
+  { id: 'ph_5', name: 'MedLife Corner Store', licenceNo: 'MH-PH-11890', address: 'Khemani, Camp 5', lat: 19.2050, lng: 73.1620, rating: 4.0, isVerified: false, openTime: '08:00', closeTime: '21:30', ownerId: 'owner_5', contact: '+91 90210 33445' },
+  { id: 'ph_6', name: 'Shree Ganesh Pharma', licenceNo: 'MH-PH-10711', address: 'Gol Maidan, Camp 3', lat: 19.2200, lng: 73.1440, rating: 3.6, isVerified: true, openTime: '08:30', closeTime: '22:00', ownerId: 'owner_6', contact: '+91 91234 77889' },
+  { id: 'ph_7', name: 'Vitality Health Chemist', licenceNo: 'MH-PH-11345', address: 'Vitthalwadi Road, Camp 1', lat: 19.2270, lng: 73.1560, rating: 4.4, isVerified: true, openTime: '09:00', closeTime: '22:00', ownerId: 'owner_7', contact: '+91 90112 65534' },
+  { id: 'ph_8', name: 'City Central Medicals', licenceNo: 'MH-PH-11623', address: 'Kalyan Road, Camp 2', lat: 19.2210, lng: 73.1330, rating: 4.1, isVerified: true, openTime: '08:00', closeTime: '22:00', ownerId: 'owner_8', contact: '+91 98225 11009' }
 ];
 
 // ---------------------------------------------------------------------------
@@ -212,7 +224,7 @@ export function isPharmacyOpenNow(pharmacy) {
 // Reservations (mock lifecycle: PENDING -> CONFIRMED / REJECTED / EXPIRED / COLLECTED)
 // ---------------------------------------------------------------------------
 export const INITIAL_RESERVATIONS = [
-  { id: 'res_1', userId: 'patient_demo', userName: 'Ananya Rao', pharmacyId: 'ph_1', medicineId: 'med_1', quantity: 2, status: 'PENDING', createdAt: Date.now() - 1000 * 60 * 4, holdMinutes: 15, totalAmount: 64 },
+  { id: 'res_1', userId: 'patient_demo', userName: 'patient', pharmacyId: 'ph_1', medicineId: 'med_1', quantity: 2, status: 'PENDING', createdAt: Date.now() - 1000 * 60 * 4, holdMinutes: 15, totalAmount: 64 },
   { id: 'res_2', userId: 'patient_demo_2', userName: 'Rahul Nair', pharmacyId: 'ph_1', medicineId: 'med_11', quantity: 1, status: 'CONFIRMED', createdAt: Date.now() - 1000 * 60 * 60, holdMinutes: 15, totalAmount: 88 }
 ];
 
@@ -235,9 +247,9 @@ export const UNMET_DEMAND_TREND = [
 // OCR simulation dataset — used by the Strip/Box scan modal
 // ---------------------------------------------------------------------------
 export const OCR_SIMULATION_RESULTS = [
-  { rawTokens: ['PARAGETAMOI', '650', 'MG', 'TAB'], candidates: ['med_1', 'med_2', 'med_3'], confidence: [0.91, 0.74, 0.52] },
+  // { rawTokens: ['PARAGETAMOI', '650', 'MG', 'TAB'], candidates: ['med_1', 'med_2', 'med_3'], confidence: [0.91, 0.74, 0.52] },
   { rawTokens: ['TEIMISARTAN', '40', 'MG'], candidates: ['med_4', 'med_5'], confidence: [0.88, 0.81] },
-  { rawTokens: ['AZITHRAL', '500'], candidates: ['med_10'], confidence: [0.95] }
+  // { rawTokens: ['AZITHRAL', '500'], candidates: ['med_10'], confidence: [0.95] }
 ];
 
 // ---------------------------------------------------------------------------
@@ -257,11 +269,11 @@ export const RESERVATION_TREND = [
 // Admin: Audit & Reports tab mock data
 // ---------------------------------------------------------------------------
 export const ADMIN_ACTIVITY_LOG = [
-  { id: 'log_1', dateTime: '2026-09-06 09:14', admin: 'Dr. Anjali Malviya', action: 'Approved pharmacy licence', module: 'Verification', status: 'Success' },
-  { id: 'log_2', dateTime: '2026-09-06 08:52', admin: 'Dr. Anjali Malviya', action: 'Edited medicine master entry — Telma 40', module: 'Medicine Master Data', status: 'Success' },
-  { id: 'log_3', dateTime: '2026-09-05 19:20', admin: 'Dr. Anjali Malviya', action: 'Rejected pharmacy registration — Quick Meds', module: 'Verification', status: 'Success' },
-  { id: 'log_4', dateTime: '2026-09-05 14:03', admin: 'Dr. Anjali Malviya', action: 'Exported unmet demand report', module: 'Reports', status: 'Success' },
-  { id: 'log_5', dateTime: '2026-09-04 11:47', admin: 'Dr. Anjali Malviya', action: 'Attempted bulk medicine import', module: 'Medicine Master Data', status: 'Failed' }
+  { id: 'log_1', dateTime: '2026-09-06 09:14', admin: 'Admin', action: 'Approved pharmacy licence', module: 'Verification', status: 'Success' },
+  { id: 'log_2', dateTime: '2026-09-06 08:52', admin: 'Admin', action: 'Edited medicine master entry — Telma 40', module: 'Medicine Master Data', status: 'Success' },
+  { id: 'log_3', dateTime: '2026-09-05 19:20', admin: 'Admin', action: 'Rejected pharmacy registration — Quick Meds', module: 'Verification', status: 'Success' },
+  { id: 'log_4', dateTime: '2026-09-05 14:03', admin: 'Admin', action: 'Exported unmet demand report', module: 'Reports', status: 'Success' },
+  { id: 'log_5', dateTime: '2026-09-04 11:47', admin: 'Admin', action: 'Attempted bulk medicine import', module: 'Medicine Master Data', status: 'Failed' }
 ];
 
 // Search-demand counts per medicine (last 7 days) for the pharmacy dashboard's

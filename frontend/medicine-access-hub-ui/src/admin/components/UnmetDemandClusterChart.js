@@ -36,7 +36,7 @@ export default function UnmetDemandClusterChart() {
 
   return (
     <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-      <h3 className="font-display font-semibold text-ink text-[15px] mb-3">Top 5 Unfulfilled Medicines (City-wide)</h3>
+      <h3 className="font-display font-semibold text-ink text-[15px] mb-3">Top 5 Unfulfilled Medicines (System-wide)</h3>
       <div className="h-64">
         <Bar data={chartData} options={options} />
       </div>

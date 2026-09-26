@@ -5,7 +5,7 @@ import { ROLES } from '../mock/mockData';
 
 const PATIENT_NAV = [
   { to: '/search', label: 'Search Medicine', icon: Search, end: true },
-  { to: '/map', label: 'Map Workspace', icon: MapPinned },
+  // { to: '/map', label: 'Map Workspace', icon: MapPinned },
   { to: '/reservations', label: 'My Reservations', icon: ClipboardList }
 ];
 
