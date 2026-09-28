@@ -47,9 +47,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public String initiateRegistration(RegisterInitRequest request) {
-        if (request.getRole() != Role.PATIENT && request.getRole() != Role.PHARMACY_OWNER) {
-            throw new BadRequestException("Self-registration is only allowed for PATIENT or PHARMACY_OWNER roles");
-        }
+//        if (request.getRole() != Role.PATIENT && request.getRole() != Role.PHARMACY_OWNER) {
+//            throw new BadRequestException("Self-registration is only allowed for PATIENT or PHARMACY_OWNER roles");
+//        }
 
         User user = userRepository.findByEmail(request.getEmail())
                 .map(existing -> {
@@ -60,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
                     existing.setName(request.getName());
                     existing.setPassword(passwordEncoder.encode(request.getPassword()));
                     existing.setPhone(request.getPhone());
-                    existing.setRole(request.getRole());
+                    existing.setRole(Role.PATIENT);
                     return existing;
                 })
                 .orElseGet(() -> User.builder()
@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
                         .email(request.getEmail())
                         .password(passwordEncoder.encode(request.getPassword()))
                         .phone(request.getPhone())
-                        .role(request.getRole())
+                        .role(Role.PATIENT)
                         .emailVerified(false)
                         .isDeleted(false)
                         .build());

@@ -32,7 +32,7 @@ public class RegisterInitRequest {
     @NotBlank(message = "Phone number is required")
     @Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be a valid 10-digit number")
     private String phone;
-
-    @NotNull(message = "Role is required")
-    private Role role;
+//
+//    @NotNull(message = "Role is required")
+//    private Role role;
 }
