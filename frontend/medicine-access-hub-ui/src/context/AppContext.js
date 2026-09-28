@@ -56,6 +56,14 @@ export function AppProvider({ children }) {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
   }, []);
 
+  // Saves the backend's AuthResponse { token, user } as the current session.
+  const completeLogin = useCallback((authResponse) => {
+    const user = { ...authResponse.user, token: authResponse.token };
+    setCurrentUser(user);
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    return user;
+  }, []);
+
   const createReservation = useCallback((reservation) => {
     setReservations(prev => [
       { ...reservation, id: `res_${Date.now()}`, status: 'PENDING', createdAt: Date.now(), holdMinutes: 15 },
@@ -109,6 +117,7 @@ export function AppProvider({ children }) {
     login,
     logout,
     loginAsUser,
+    completeLogin,
     currentUser,
     inventory,
     reservations,
