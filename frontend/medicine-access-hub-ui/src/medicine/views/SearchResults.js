@@ -16,6 +16,9 @@ import {
   isPharmacyOpenNow,
   getSubstitutes
 } from '../../mock/mockData';
+import { buildFuzzyIndex, getFuzzyMatches, FUZZY_MATCH_THRESHOLD } from '../../utils/fuzzyMatch';
+
+const FUZZY_INDEX = buildFuzzyIndex(MEDICINES);
 
 export default function SearchResults() {
   const { inventory, pharmacies } = useApp();
@@ -28,6 +31,8 @@ export default function SearchResults() {
   const [ocrOpen, setOcrOpen] = useState(false);
   const [detailMedicine, setDetailMedicine] = useState(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [correctedFrom, setCorrectedFrom] = useState(null);
 
   function resolveMedicine(rawQuery) {
     const q = rawQuery.trim().toLowerCase();
@@ -50,8 +55,28 @@ export default function SearchResults() {
   function runSearch(rawQuery) {
     setQuery(rawQuery);
     setHasSearched(true);
+    setSuggestions([]);
+    setCorrectedFrom(null);
+
     const resolved = resolveMedicine(rawQuery);
-    setActiveMedicineId(resolved ? resolved.id : 'NOT_FOUND');
+    if (resolved) {
+      setActiveMedicineId(resolved.id);
+      return;
+    }
+
+    const matches = getFuzzyMatches(rawQuery, FUZZY_INDEX);
+    if (matches.length > 0) {
+      setSuggestions(matches);
+      setActiveMedicineId('NOT_FOUND');
+    } else {
+      setActiveMedicineId('NOT_FOUND');
+    }
+  }
+
+  function handleSuggestionClick(medicine) {
+    setCorrectedFrom(query);
+    setSuggestions([]);
+    setActiveMedicineId(medicine.id);
   }
 
   const activeMedicine = useMemo(() => MEDICINES.find(m => m.id === activeMedicineId) || null, [activeMedicineId]);
@@ -120,7 +145,27 @@ export default function SearchResults() {
         onOpenScan={() => setOcrOpen(true)}
       />
 
-      {hasSearched && activeMedicineId === 'NOT_FOUND' && (
+      {hasSearched && activeMedicineId === 'NOT_FOUND' && suggestions.length > 0 && (
+        <div className="rounded-xl border border-border bg-surface p-4">
+          <p className="text-sm text-ink-soft">
+            No exact match for "<span className="text-ink font-medium">{query}</span>". Did you mean:
+          </p>
+          <div className="flex flex-wrap gap-2 mt-3">
+            {suggestions.map(({ medicine, score }) => (
+              <button
+                key={medicine.id}
+                onClick={() => handleSuggestionClick(medicine)}
+                className="px-3 py-1.5 rounded-lg bg-app border border-border text-xs font-medium text-ink hover:border-primary/40 transition-colors"
+              >
+                {medicine.brand} <span className="text-ink-soft">· {Math.round(score * 100)}% match</span>
+                {score >= FUZZY_MATCH_THRESHOLD && <span className="ml-1 text-primary">★</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {hasSearched && activeMedicineId === 'NOT_FOUND' && suggestions.length === 0 && (
         <div className="rounded-xl border border-border bg-surface p-4 text-sm text-ink-soft">
           No medicine matched "<span className="text-ink font-medium">{query}</span>". Try the generic or salt name, or use strip scan.
         </div>
@@ -157,6 +202,14 @@ export default function SearchResults() {
             <div className="lg:col-span-2 order-2 lg:order-1 flex flex-col gap-3">
               {rankedResults.length > 0 && (
                 <>
+                  {correctedFrom && (
+                    <p className="text-xs text-ink-soft px-1">
+                      Showing results for <span className="font-medium text-ink">{activeMedicine.brand}</span> ·{' '}
+                      <button onClick={() => runSearch(correctedFrom)} className="underline hover:text-ink">
+                        Search instead for "{correctedFrom}"
+                      </button>
+                    </p>
+                  )}
                   <div className="flex items-baseline justify-between px-1">
                     <h2 className="font-display font-semibold text-ink text-[15px]">
                       {rankedResults.length} {rankedResults.length === 1 ? 'pharmacy has' : 'pharmacies have'} {activeMedicine.brand}
