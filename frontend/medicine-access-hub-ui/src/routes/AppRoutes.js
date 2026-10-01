@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from '../app/auth/views/Login.js';
 import Register from '../app/auth/views/Register.js';
+import PharmacyRegister from '../app/auth/views/PharmacyRegister.js';
 import MapView from '../map/views/MapView.js';
 import SearchResults from '../medicine/views/SearchResults.js';
 import MyReservations from '../reservations/views/MyReservations.js';
@@ -25,6 +26,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/pharmacy-register" element={<PharmacyRegister />} />
 
       <Route path="/" element={<Navigate to={fallback} replace />} />
 

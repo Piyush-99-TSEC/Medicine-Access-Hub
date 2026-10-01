@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Medicine Access Hub — Mock Data Layer
 // Simulates the PostgreSQL/PostGIS + AI-service backend for frontend-only dev.
-// Coordinates are centred on a sample locality (Pune, India) for realism.
+// Coordinates are centred on a sample locality (Ulhasnagar, India) for realism.
 // ---------------------------------------------------------------------------
 
 // export const USER_LOCATION = { lat: 18.5204, lng: 73.8567 };
@@ -289,3 +289,19 @@ export const ADMIN_REPORTS = [
   { id: 'rep_3', name: 'Reservation Report', description: 'Reservation volume, fulfilment rate, and status breakdown.', updated: '2026-09-05' },
   { id: 'rep_4', name: 'Unmet Demand Report', description: 'DBSCAN cluster summary of zero-result searches by locality.', updated: '2026-09-05' }
 ];
+// Pharmacy self-registration (UI only)
+export function registerPharmacy(f) {
+  const n = PHARMACIES.length + 1;
+  const pharmacy = {
+    id: `ph_${n}`, name: f.name, licenceNo: f.licenceNo, address: f.address,
+    lat: Number(f.lat), lng: Number(f.lng), rating: 0, isVerified: false,
+    openTime: f.openTime, closeTime: f.closeTime, ownerId: `owner_${n}`, contact: f.contact,
+    ownerName: f.ownerName, email: f.email, gstNo: f.gstNo
+  };
+  PHARMACIES.push(pharmacy);
+  PENDING_VERIFICATIONS.push({
+    id: `ver_${PENDING_VERIFICATIONS.length + 1}`, pharmacyId: pharmacy.id,
+    submittedAt: new Date().toISOString().slice(0, 10), documents: ['Drug Licence Form 20', 'GST Certificate']
+  });
+  return pharmacy;
+}
