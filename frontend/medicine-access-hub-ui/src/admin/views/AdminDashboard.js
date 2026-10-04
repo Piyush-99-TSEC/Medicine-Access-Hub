@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ShieldCheck, Database, BarChart3, Search, ShieldAlert, FileClock, Download, FileText } from 'lucide-react';
 import PharmacyVerificationCard from '../components/PharmacyVerificationCard.js';
@@ -7,6 +7,7 @@ import UnmetDemandClusterChart from '../components/UnmetDemandClusterChart.js';
 import { useApp } from '../../context/AppContext.js';
 import { MEDICINES, UNMET_DEMAND_CLUSTERS, ADMIN_ACTIVITY_LOG, ADMIN_REPORTS } from '../../mock/mockData';
 import Badge from '../../components/Badge.js';
+import { adminPharmacyApi } from '../../api/client.js';
 
 const TABS = [
   { key: 'verification', label: 'Pharmacy Verification', icon: ShieldCheck },
@@ -17,18 +18,56 @@ const TABS = [
 const VALID_TABS = TABS.map(t => t.key);
 
 function VerificationTab() {
-  const { verifications, pharmacies, verifyPharmacy } = useApp();
-  const verified = pharmacies.filter(p => p.isVerified);
-  const rejected = Math.max(0, pharmacies.length - verified.length - verifications.length);
+  const { currentUser, showToast } = useApp();
+  const token = currentUser?.token;
+  const [pending, setPending] = useState([]);
+  const [verified, setVerified] = useState([]);
+  const [rejected, setRejected] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = useCallback(async () => {
+    try {
+      const [p, v, r] = await Promise.all([
+        adminPharmacyApi.list('PENDING', token),
+        adminPharmacyApi.list('VERIFIED', token),
+        adminPharmacyApi.list('REJECTED', token)
+      ]);
+      setPending(p);
+      setVerified(v);
+      setRejected(r);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function decide(id, approve) {
+    try {
+      if (approve) await adminPharmacyApi.verify(id, token);
+      else await adminPharmacyApi.reject(id, token);
+      showToast(approve ? 'Pharmacy approved.' : 'Pharmacy registration rejected.', approve ? 'success' : 'danger');
+      await load();
+    } catch (err) {
+      showToast(err.message, 'danger');
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
+      {error && <div className="rounded-xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">{error}</div>}
+      {loading && <p className="text-sm text-ink-soft">Loading pharmacies…</p>}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Pending Verification', value: verifications.length },
+          { label: 'Pending Verification', value: pending.length },
           { label: 'Verified Pharmacies', value: verified.length },
-          { label: 'Rejected Pharmacies', value: rejected },
-          { label: 'Total Pharmacies', value: pharmacies.length }
+          { label: 'Rejected Pharmacies', value: rejected.length },
+          { label: 'Total Pharmacies', value: pending.length + verified.length + rejected.length }
         ].map(s => (
           <div key={s.label} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
             <p className="text-2xl font-display font-semibold text-ink">{s.value}</p>
@@ -38,26 +77,21 @@ function VerificationTab() {
       </div>
 
       <div>
-        <h2 className="font-display font-semibold text-ink text-[15px] mb-3">Pending Verification ({verifications.length})</h2>
-        {verifications.length === 0 && (
+        <h2 className="font-display font-semibold text-ink text-[15px] mb-3">Pending Verification ({pending.length})</h2>
+        {!loading && pending.length === 0 && (
           <div className="rounded-xl border border-dashed border-border p-6 text-sm text-ink-soft text-center">
             No pharmacies awaiting verification.
           </div>
         )}
         <div className="flex flex-col gap-3">
-          {verifications.map(v => {
-            const pharmacy = pharmacies.find(p => p.id === v.pharmacyId);
-            if (!pharmacy) return null;
-            return (
-              <PharmacyVerificationCard
-                key={v.id}
-                pharmacy={pharmacy}
-                verification={v}
-                onApprove={() => verifyPharmacy(v.id, true)}
-                onReject={() => verifyPharmacy(v.id, false)}
-              />
-            );
-          })}
+          {pending.map(p => (
+            <PharmacyVerificationCard
+              key={p.id}
+              pharmacy={p}
+              onApprove={() => decide(p.id, true)}
+              onReject={() => decide(p.id, false)}
+            />
+          ))}
         </div>
       </div>
 
@@ -75,7 +109,38 @@ function VerificationTab() {
           ))}
         </div>
       </div>
-    </div>
+
+       <div>
+        <h2 className="font-display font-semibold text-ink text-[15px] mb-3">Pending Verification ({pending.length})</h2>
+        {!loading && pending.length === 0 && (
+          <div className="rounded-xl border border-dashed border-border p-6 text-sm text-ink-soft text-center">
+            No pharmacies awaiting verification.
+          </div>
+        )}
+        <div className="flex flex-col gap-3">
+          {pending.map(p => (
+            <PharmacyVerificationCard
+              key={p.id}
+              pharmacy={p}
+              onApprove={() => decide(p.id, true)}
+              onReject={() => decide(p.id, false)}
+            />
+          ))}
+          <div>
+            <h2 className="font-display font-semibold text-ink text-[15px] mb-3">Rejected Pharmacies ({rejected.length})</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {rejected.map(p => (
+                <div key={p.id} className="rounded-xl border border-border bg-surface p-3.5">
+                  <p className="text-sm font-medium text-ink">{p.name}</p>
+                  <p className="text-xs text-ink-soft">{p.licenceNo} · {p.ownerName} · {p.contactPhone}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>    
   );
 }
 

@@ -37,3 +37,16 @@ export const authApi = {
   resendOtp: body => api('/api/v1/auth/otp/resend', { method: 'POST', body }),
   me: token => api('/api/v1/auth/me', { token })
 };
+
+export const pharmacyApi = {
+  register: (body, token) => api('/api/v1/pharmacies/register', { method: 'POST', body, token }),
+  me: token => api('/api/v1/pharmacies/me', { token }),
+  updateMe: (body, token) => api('/api/v1/pharmacies/me', { method: 'PUT', body, token }),
+  getById: id => api(`/api/v1/pharmacies/${id}`)
+};
+
+export const adminPharmacyApi = {
+  list: (status, token) => api(`/api/v1/admin/pharmacies?status=${status}`, { token }),
+  verify: (id, token) => api(`/api/v1/admin/pharmacies/${id}/verify`, { method: 'PATCH', token }),
+  reject: (id, token) => api(`/api/v1/admin/pharmacies/${id}/reject`, { method: 'PATCH', token })
+};

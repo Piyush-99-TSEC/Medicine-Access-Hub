@@ -162,9 +162,9 @@ export default function Login() {
           <p className="text-xs text-ink-soft text-center mt-4">
             Don't have an account? <Link to="/register" className="text-primary font-medium">Register</Link>
           </p>
-          <p className="text-xs text-ink-soft text-center mt-2">
+          {/* <p className="text-xs text-ink-soft text-center mt-2">
             Own a pharmacy? <Link to="/pharmacy-register" className="text-primary font-medium">Pharmacy Register</Link>
-          </p>
+          </p> */}
         </div>
       </div>
 

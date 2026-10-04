@@ -1,18 +1,18 @@
-import { CheckCircle2, XCircle, FileText } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
-export default function PharmacyVerificationCard({ pharmacy, verification, onApprove, onReject }) {
+export default function PharmacyVerificationCard({ pharmacy, onApprove, onReject }) {
   return (
     <div className="rounded-2xl border border-warning/25 bg-warning/5 p-4 flex items-center justify-between gap-4">
       <div>
         <p className="font-medium text-ink text-sm">{pharmacy.name}</p>
-        <p className="text-xs text-ink-soft mt-0.5">{pharmacy.address} · Licence {pharmacy.licenceNo}</p>
-        <div className="flex gap-2 mt-2">
-          {verification.documents.map(doc => (
-            <span key={doc} className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-surface border border-border text-ink-soft">
-              <FileText size={11} /> {doc}
-            </span>
-          ))}
-        </div>
+        <p className="text-xs text-ink-soft mt-0.5">{pharmacy.address}</p>
+        <p className="text-xs text-ink-soft mt-0.5">Licence {pharmacy.licenceNo} · GST {pharmacy.gstNo}</p>
+        <p className="text-xs text-ink-soft mt-0.5">
+          {pharmacy.ownerName} · {pharmacy.contactPhone} · {pharmacy.email}
+        </p>
+        {pharmacy.createdAt && (
+          <p className="text-[11px] text-ink-soft mt-2">Submitted {new Date(pharmacy.createdAt).toLocaleDateString()}</p>
+        )}
       </div>
       <div className="flex gap-2 shrink-0">
         <button onClick={onApprove} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-success text-white text-xs font-medium hover:bg-success/90 transition-colors">

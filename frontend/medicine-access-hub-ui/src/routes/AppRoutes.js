@@ -26,7 +26,14 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/pharmacy-register" element={<PharmacyRegister />} />
+      <Route
+        path="/pharmacy-register"
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.PATIENT]}>
+            <PharmacyRegister />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="/" element={<Navigate to={fallback} replace />} />
 

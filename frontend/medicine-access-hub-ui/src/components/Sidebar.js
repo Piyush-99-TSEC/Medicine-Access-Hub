@@ -1,12 +1,14 @@
 import { NavLink } from 'react-router-dom';
-import { Search, MapPinned, ClipboardList } from 'lucide-react';
+import { Search, MapPinned, ClipboardList, Store } from 'lucide-react';
 import { useApp } from '../context/AppContext.js';
 import { ROLES } from '../mock/mockData';
+
 
 const PATIENT_NAV = [
   { to: '/search', label: 'Search Medicine', icon: Search, end: true },
   // { to: '/map', label: 'Map Workspace', icon: MapPinned },
-  { to: '/reservations', label: 'My Reservations', icon: ClipboardList }
+  { to: '/reservations', label: 'My Reservations', icon: ClipboardList },
+  { to: '/pharmacy-register', label: 'List Your Pharmacy', icon: Store }
 ];
 
 // Pharmacy Owner and Admin dashboards use their own top horizontal tabs

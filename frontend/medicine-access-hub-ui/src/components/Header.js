@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Pill, ChevronDown, User, ClipboardList, Bell, Settings, LogOut, Boxes, ShieldCheck } from 'lucide-react';
+import { Pill, ChevronDown, User, ClipboardList, Bell, Settings, LogOut, Boxes, ShieldCheck, Store } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext.js';
 import { ROLES } from '../mock/mockData';
@@ -50,7 +50,8 @@ export default function Header() {
   const roleLinks = {
     [ROLES.PATIENT]: [
       { label: 'My Profile', icon: User, action: () => placeholder('Profile') },
-      { label: 'My Reservations', icon: ClipboardList, action: () => navigate('/reservations') }
+      { label: 'My Reservations', icon: ClipboardList, action: () => navigate('/reservations') },
+      { label: 'List Your Pharmacy', icon: Store, action: () => navigate('/pharmacy-register') }
     ],
     [ROLES.PHARMACY_OWNER]: [
       { label: 'My Profile', icon: User, action: () => placeholder('Profile') },
