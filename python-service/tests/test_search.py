@@ -1,7 +1,7 @@
 import pytest
-from app import config
-from app.data_loader import load_medicines
-from app.matcher import MedicineMatcher
+from app.core import config
+from app.data.loader import load_medicines
+from app.search.matcher import MedicineMatcher
 
 
 @pytest.fixture(scope="module")

@@ -7,3 +7,6 @@ pytest
 httpx
 sqlalchemy
 psycopg2-binary
+rapidocr-onnxruntime
+pillow
+python-multipart

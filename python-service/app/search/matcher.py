@@ -3,7 +3,7 @@ import numpy as np
 from rapidfuzz import fuzz
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from app import config
+from app.core import config
 
 FIELDS = ["brand_name", "salt_composition", "strength", "dosage_form", "manufacturer"]
 

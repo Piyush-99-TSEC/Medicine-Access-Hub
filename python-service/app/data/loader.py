@@ -1,6 +1,6 @@
 import pandas as pd
 from sqlalchemy import create_engine
-from app import config
+from app.core import config
 
 COLUMNS = ["id", "brand_name", "salt_composition", "strength", "dosage_form",
            "manufacturer", "pack_size", "mrp", "rx_required"]
