@@ -10,3 +10,4 @@ psycopg2-binary
 rapidocr-onnxruntime
 pillow
 python-multipart
+groq

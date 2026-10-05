@@ -1,5 +1,6 @@
 import re
 from app.ocr.reader import read_lines
+from app.ocr.vision import extract_medicines
 
 FORM = r"(?:tab|tabs|tablet|cap|caps|capsule|syp|syr|syrup|inj|drops|oint|gel|cream)"
 LINE = re.compile(rf"^\s*(?:\d+\s*[\).]\s*)?(?:{FORM}\b\.?|syrup|syr|syp)\s*(.+)$", re.I)
@@ -28,8 +29,7 @@ def medicine_entries(lines):
             entries[-1]["hint"].append(line)
     return entries
 
-def identify_prescription(image_bytes, matcher, top_n=3):
-    entries = medicine_entries(read_lines(image_bytes, False))
+def match_entries(entries, matcher, top_n=3):
     queries = [f"{e['name']} {' '.join(e['hint'])}" for e in entries]
     medicines = []
     for e, res in zip(entries, matcher.search_many(queries, top_k=top_n * 3)):
@@ -41,3 +41,17 @@ def identify_prescription(image_bytes, matcher, top_n=3):
                 cands.append({k: r[k] for k in ("id", "brand_name", "salt_composition", "strength", "score")})
         medicines.append({"query": e["name"], "matched": res["matched"], "candidates": cands[:top_n]})
     return {"medicines": medicines, "requires_confirmation": True}
+
+
+def identify_prescription(image_bytes, matcher, top_n=3):
+    return match_entries(medicine_entries(read_lines(image_bytes, False)), matcher, top_n)
+
+
+def identify_handwritten(image_bytes, matcher, top_n=3):
+    entries, seen = [], set()
+    for item in extract_medicines(image_bytes):
+        name = re.sub(rf"^\s*{FORM}\b\.?\s*", "", item.get("name", ""), flags=re.I).strip()
+        if name and name.lower() not in seen:
+            seen.add(name.lower())
+            entries.append({"name": name, "hint": [item["salt"]] if item.get("salt") else []})
+    return match_entries(entries, matcher, top_n)
