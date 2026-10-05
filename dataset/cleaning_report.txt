@@ -1,0 +1,55 @@
+
+======================================================================
+CLEANING REPORT
+======================================================================
+Rows in:                           253973
+Rows dropped:
+    discontinued                     7905
+    missing name                        0
+    missing composition                 0
+    missing or zero price               4
+    duplicates                       1250
+    TOTAL dropped                    9159
+Clean rows (before subset):        244814
+Not picked for demo subset:        236814
+Rows out:                            8000
+
+Output summary:
+    dosage forms: {'Tablet': 4741, 'Capsule': 847, 'Syrup': 677, 'Suspension': 513, 'Injection': 400, 'Drops': 290, 'Cream': 146, 'Gel': 105, 'Ointment': 90, 'Solution': 76, 'Powder': 47, 'Inhaler': 16, 'Other': 14, 'Lotion': 14, 'Spray': 11, 'Soap': 6, 'Shampoo': 4, 'Suppository': 3}
+    rx_required true: 6113 of 8000
+    missing strength: 211
+    must_include rows matched: 243
+
+Things that look off:
+    * must_include entries NOT in the dataset: Aristozyme, Shelcal, Becosules, Limcee, Digene, Gelusil, Electral, Liv 52, Zincovit, Revital, Disprin, Saridon, Volini Gel
+    * must_include entries matching >15 rows (add more words to narrow): {'Sinarest': 18, 'Betadine': 18, 'Candid': 20}
+    * price 0 rows dropped, e.g.: Covishield Vaccine, Covaxin Vaccine, Moderna Vaccine, Sputnik V Vaccine
+    * 14 rows have dosage_form 'Other'; pack labels: {'packet of 1 Disintegrating Strip': 2, 'packet of 1 Kit': 2, 'packet of 50 ml Scrub': 1, 'bottle of 15 ml Mouth Paint': 1, 'bottle of 25 ml Mouth Paint': 1}
+    * most common salts NOT flagged Rx (review rx_keywords.txt):
+          80  aceclofenac + paracetamol
+          74  paracetamol
+          63  chlorpheniramine maleate + paracetamol
+          48  diclofenac
+          39  povidone iodine
+          35  ambroxol + guaifenesin
+          33  levocetirizine
+          33  nimesulide + paracetamol
+          32  cetirizine
+          32  mefenamic acid + paracetamol
+          32  nimesulide
+          29  chlorpheniramine maleate + dextromethorphan hydrobromide
+
+10 random sample rows:
+                         brand_name                       salt_composition             strength dosage_form                      manufacturer               pack_size    mrp rx_required
+          Emprogest 200mg Injection      Progesterone (Natural Micronized)                200mg   Injection        Emcure Pharmaceuticals Ltd  vial of 2 ml Injection 123.81        true
+                         Flocy Drop                          Ciprofloxacin             0.3% w/v       Drops Sun Pharmaceutical Industries Ltd    packet of 10 ml Drop  13.82        true
+               Criticold Plus Syrup Chlorpheniramine Maleate + Paracetamol  2mg/5ml + 250mg/5ml       Syrup            Leeford Healthcare Ltd   bottle of 60 ml Syrup  85.00       false
+                   Hexidol 5 Tablet                            Haloperidol                  5mg      Tablet       Torrent Pharmaceuticals Ltd     strip of 10 tablets  33.49        true
+                  Movexx Plus Syrup              Aceclofenac + Paracetamol 50mg/5ml + 125mg/5ml       Syrup                         Cipla Ltd   bottle of 60 ml Syrup  14.22       false
+Formic Neo 125 mg/62.5 mg Injection                Ceftriaxone + Sulbactam       125mg + 62.5mg   Injection         Elder Pharmaceuticals Ltd vial of 10 ml Injection  36.50        true
+               Dapefy-S 5/50 Tablet            Dapagliflozin + Sitagliptin           5mg + 50mg      Tablet Sun Pharmaceutical Industries Ltd     strip of 15 tablets 240.00        true
+    Cefiwok OZ 200 mg/500 mg Tablet                  Cefixime + Ornidazole        200mg + 500mg      Tablet       Dr Reddy's Laboratories Ltd     strip of 10 tablets 164.50        true
+              Melzap MD 0.25 Tablet                             Clonazepam               0.25mg      Tablet            Alkem Laboratories Ltd   strip of 10 tablet md  20.38        true
+                  Losar-Beta Tablet                    Atenolol + Losartan          50mg + 50mg      Tablet       Torrent Pharmaceuticals Ltd     strip of 10 tablets 138.65        true
+
+Wrote data/medicines.csv (8000 rows) and data/medicines_sample.csv

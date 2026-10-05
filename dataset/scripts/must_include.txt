@@ -1,0 +1,112 @@
+# must_include.txt - brands that must ALWAYS be in the demo subset
+#
+#   * One brand per line, case-insensitive, hyphens and spaces treated the same.
+#   * A line matches brand names that START with it, as whole words:
+#       "Dolo 650"  matches "Dolo 650 Tablet" and "Dolo 650mg Tablet"
+#       "Crocin"    matches "Crocin Advance Tablet", "Crocin 1000mg Tablet" ...
+#       "Dolo"      does NOT match "Dolonex" (it must end at a word boundary)
+#     To pick one product only, write more of the name ("Crocin Advance").
+#   * The script prints any line that matched nothing, so you can fix typos.
+#
+# NOTE: the Kaggle file only has allopathic medicines, so supplements, antacids,
+# ORS and Ayurvedic brands (Shelcal, Digene, Electral, Liv 52 ...) are NOT in it.
+# They are listed at the bottom so the report reminds you to add them by hand.
+
+# ---- fever, pain, cold ----
+Dolo 650
+Dolo 500
+Crocin Advance
+Crocin Pain Relief
+Crocin 1000mg
+Calpol 650
+Calpol 500
+Combiflam
+Meftal Spas
+Meftal Forte
+Zerodol SP
+Zerodol P
+Brufen 400
+Sinarest
+Cheston Cold
+Vicks Action 500
+Otrivin
+Benadryl
+Corex DX
+Ascoril LS
+Mucinac
+Okacet
+Levocet
+Cetzine
+Allegra 120
+Allegra 180
+Montair LC
+Avil 25
+
+# ---- antibiotics ----
+Azithral 500
+Azithral 250
+Augmentin 625
+Clavam 625
+Zifi 200
+Taxim O 200
+Monocef O 200
+Ciplox 500
+Cifran 500
+Metrogyl 400
+Flagyl 400
+
+# ---- stomach ----
+Pan 40
+Pantocid
+Pantop 40
+Omez
+Rantac 150
+Ondem 4
+Domstal 10
+Cremaffin
+Duphalac
+Aristozyme
+
+# ---- long-term / chronic ----
+Ecosprin 75
+Telma 40
+Telma AM
+Amlokind AT
+Concor 5
+Lasix
+Atorva 40
+Atorva 20
+Rosuvas 10
+Glycomet 500
+Glycomet GP 1
+Thyronorm 50mcg
+Thyronorm 25mcg
+Storvas 10
+Human Mixtard
+Lantus
+
+# ---- vitamins, skin ----
+Neurobion
+Evion LC
+Folvite 5mg
+Betadine
+Candid
+
+# ---- inhalers ----
+Asthalin
+Foracort
+Budecort
+
+# ---- not in the Kaggle file (expected to be reported as "not found") ----
+Shelcal
+Becosules
+Limcee
+Digene
+Gelusil
+Electral
+Liv 52
+Zincovit
+Revital
+Disprin
+Saridon
+Volini Gel
