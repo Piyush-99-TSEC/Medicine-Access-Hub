@@ -50,3 +50,9 @@ export const adminPharmacyApi = {
   verify: (id, token) => api(`/api/v1/admin/pharmacies/${id}/verify`, { method: 'PATCH', token }),
   reject: (id, token) => api(`/api/v1/admin/pharmacies/${id}/reject`, { method: 'PATCH', token })
 };
+
+export const medicineApi = {
+  search: (q, page = 0, size = 20) =>
+    api(`/api/v1/medicines?q=${encodeURIComponent(q)}&page=${page}&size=${size}`),
+  getById: id => api(`/api/v1/medicines/${id}`)
+};

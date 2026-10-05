@@ -69,6 +69,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/pharmacies/register").hasRole("PATIENT")
                         .requestMatchers("/api/v1/pharmacies/me").hasAnyRole("PATIENT", "PHARMACY_OWNER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/pharmacies/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/medicines/**").permitAll()
                         .requestMatchers("/api/v1/auth/me").authenticated()
                         .anyRequest().authenticated()
                 )
