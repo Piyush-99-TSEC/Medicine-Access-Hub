@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Modifying;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,6 +20,23 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     List<Inventory> findByPharmacyId(Long pharmacyId);
 
     Optional<Inventory> findByPharmacyIdAndMedicineId(Long pharmacyId, Long medicineId);
+
+    /** Atomic hold: reduces stock only if enough is left. Returns 0 rows when stock is insufficient. */
+    @Modifying
+    @Query("UPDATE Inventory i SET i.quantity = i.quantity - :qty, i.updatedAt = CURRENT_TIMESTAMP " +
+            "WHERE i.pharmacy.id = :pharmacyId AND i.medicine.id = :medicineId AND i.quantity >= :qty")
+    int reduceStock(@Param("pharmacyId") Long pharmacyId,
+                    @Param("medicineId") Long medicineId,
+                    @Param("qty") int qty);
+
+    /** Gives held stock back (cancelled or expired confirmed reservation). */
+    @Modifying
+    @Query("UPDATE Inventory i SET i.quantity = i.quantity + :qty, i.updatedAt = CURRENT_TIMESTAMP " +
+            "WHERE i.pharmacy.id = :pharmacyId AND i.medicine.id = :medicineId")
+    int restoreStock(@Param("pharmacyId") Long pharmacyId,
+                     @Param("medicineId") Long medicineId,
+                     @Param("qty") int qty);
+
 
     interface AvailabilityRow {
         Long getInventoryId();

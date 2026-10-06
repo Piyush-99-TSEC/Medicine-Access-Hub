@@ -69,6 +69,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/pharmacies/register").hasRole("PATIENT")
                         .requestMatchers("/api/v1/pharmacies/me").hasAnyRole("PATIENT", "PHARMACY_OWNER")
                         .requestMatchers("/api/v1/pharmacies/me/inventory/**").hasRole("PHARMACY_OWNER")
+                        .requestMatchers("/api/v1/pharmacies/me/reservations/**").hasRole("PHARMACY_OWNER")
+                        .requestMatchers("/api/v1/reservations/**").hasRole("PATIENT")
                         .requestMatchers(HttpMethod.GET, "/api/v1/pharmacies/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/medicines/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/medicines/scan").hasRole("PATIENT")

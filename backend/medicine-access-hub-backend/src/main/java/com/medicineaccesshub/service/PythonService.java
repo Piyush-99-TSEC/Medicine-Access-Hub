@@ -18,4 +18,7 @@ public interface PythonService {
 
     /** OCR result for a strip or box photo: extracted lines and top candidate medicines. */
     Optional<Map<String, Object>> ocr(byte[] image, String filename);
+
+    /** Road route (A*) between two points: {distanceKm, path:[[lat,lng],...]}. */
+    Optional<Map<String, Object>> route(double fromLat, double fromLng, double toLat, double toLng);
 }

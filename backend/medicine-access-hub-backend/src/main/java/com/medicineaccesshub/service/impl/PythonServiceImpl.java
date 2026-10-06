@@ -100,4 +100,20 @@ public class PythonServiceImpl implements PythonService {
             return Optional.empty();
         }
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Optional<Map<String, Object>> route(double fromLat, double fromLng, double toLat, double toLng) {
+        try {
+            Map<String, Object> res = client.post().uri("/route")
+                    .body(Map.of(
+                            "origin", Map.of("lat", fromLat, "lng", fromLng),
+                            "destination", Map.of("lat", toLat, "lng", toLng)))
+                    .retrieve().body(Map.class);
+            return Optional.ofNullable(res);
+        } catch (Exception e) {
+            log.warn("Python /route failed: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
 }
