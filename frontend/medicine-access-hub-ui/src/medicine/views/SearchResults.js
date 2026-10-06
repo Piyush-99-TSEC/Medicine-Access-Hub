@@ -432,11 +432,14 @@ export default function SearchResults() {
         price: Number(row.price),
         status: row.quantity <= 10 ? 'LOW_STOCK' : 'IN_STOCK',
         rating: pharmacy.rating,
-        // backend gives straight-line km; roads are roughly 25% longer
-        roadDistanceKm: +(row.distanceKm * 1.25).toFixed(2),
-        isOpenNow: isPharmacyOpenNow(pharmacy)
+        // backend gives road distance (A*) when the Python service is up
+        roadDistanceKm: row.distanceKm,
+        isOpenNow: row.isOpen ?? isPharmacyOpenNow(pharmacy),
+        wsmScore: row.score != null ? +(row.score * 100).toFixed(1) : null
       };
     });
+    // Already ranked by the backend; fall back to the local ranking if Python was down
+    if (candidates.every(c => c.wsmScore != null)) return candidates;
     return rankPharmaciesWSM(candidates);
   }, [availability]);
 

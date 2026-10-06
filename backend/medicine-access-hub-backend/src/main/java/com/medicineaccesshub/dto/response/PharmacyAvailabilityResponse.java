@@ -27,6 +27,8 @@ public class PharmacyAvailabilityResponse {
     private BigDecimal price;
     private String expiryDate;
     private Double distanceKm;
+    private Double score;
+    private Boolean isOpen;
 
     public static PharmacyAvailabilityResponse from(AvailabilityRow r) {
         return PharmacyAvailabilityResponse.builder()

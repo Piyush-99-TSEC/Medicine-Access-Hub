@@ -21,6 +21,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.medicineaccesshub.service.PythonService;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -36,6 +40,8 @@ public class InventoryServiceImpl implements InventoryService {
     private final InventoryRepository inventoryRepository;
     private final MedicineRepository medicineRepository;
     private final PharmacyRepository pharmacyRepository;
+    private final PythonService pythonService;
+
 
     @Override
     @Transactional(readOnly = true)
@@ -49,10 +55,47 @@ public class InventoryServiceImpl implements InventoryService {
         if (!medicineRepository.existsById(medicineId)) {
             throw new ResourceNotFoundException("Medicine", "id", medicineId);
         }
-        return inventoryRepository.findAvailability(medicineId, lat, lng, radiusKm)
+        List<PharmacyAvailabilityResponse> rows = inventoryRepository
+                .findAvailability(medicineId, lat, lng, radiusKm)
                 .stream()
                 .map(PharmacyAvailabilityResponse::from)
                 .toList();
+        return rankWithPython(lat, lng, rows);
+    }
+
+    /** Ranks by road distance and weighted score via Python; keeps SQL order if Python is down. */
+    private List<PharmacyAvailabilityResponse> rankWithPython(double lat, double lng,
+                                                              List<PharmacyAvailabilityResponse> rows) {
+        if (rows.isEmpty()) {
+            return rows;
+        }
+        List<Map<String, Object>> payload = rows.stream().map(r -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("inventoryId", r.getInventoryId());
+            m.put("pharmacyId", r.getPharmacyId());
+            m.put("latitude", r.getLatitude());
+            m.put("longitude", r.getLongitude());
+            m.put("openTime", r.getOpenTime());
+            m.put("closeTime", r.getCloseTime());
+            m.put("quantity", r.getQuantity());
+            m.put("price", r.getPrice());
+            m.put("avgRating", r.getAvgRating());
+            m.put("distanceKm", r.getDistanceKm());
+            return m;
+        }).toList();
+
+        Map<Long, PharmacyAvailabilityResponse> byId = rows.stream()
+                .collect(Collectors.toMap(PharmacyAvailabilityResponse::getInventoryId, r -> r));
+
+        return pythonService.rank(lat, lng, payload)
+                .map(ranked -> ranked.stream().map(m -> {
+                    PharmacyAvailabilityResponse r = byId.get(((Number) m.get("inventoryId")).longValue());
+                    r.setDistanceKm(((Number) m.get("distanceKm")).doubleValue());
+                    r.setScore(((Number) m.get("score")).doubleValue());
+                    r.setIsOpen((Boolean) m.get("isOpen"));
+                    return r;
+                }).toList())
+                .orElse(rows);
     }
 
     @Override
