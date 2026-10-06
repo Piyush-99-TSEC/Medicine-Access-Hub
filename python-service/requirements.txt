@@ -11,3 +11,5 @@ rapidocr-onnxruntime
 pillow
 python-multipart
 groq
+osmnx
+networkx
