@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Boxes, ClipboardList, MapPinned, Check, X, Clock3, AlertTriangle, Search } from 'lucide-react';
 import InventoryTable from '../components/InventoryTable.js';
@@ -10,6 +10,8 @@ import { MEDICINES, MEDICINE_SEARCH_DEMAND, UNMET_DEMAND_CLUSTERS, UNMET_DEMAND_
 import Badge, { stockBadgeLabel, stockBadgeVariant } from '../../components/Badge.js';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler } from 'chart.js';
+import { ownerInventoryApi } from '../../api/client';
+import { pharmacyApi } from '../../api/client';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
 
@@ -42,91 +44,220 @@ function SummaryCard({ label, value, tone = 'default' }) {
   );
 }
 
-function InventoryTab({ pharmacyId }) {
-  const { inventory } = useApp();
+// function InventoryTab({ pharmacyId }) {
+//   // const { inventory } = useApp();
+//   const { inventory, currentUser } = useApp();
+//   const [summary, setSummary] = useState(null);
+//   const [summaryKey, setSummaryKey] = useState(0);
+
+//   useEffect(() => {
+//     let cancelled = false;
+//     ownerInventoryApi
+//       .summary(currentUser?.token)
+//       .then(data => { if (!cancelled) setSummary(data); })
+//       .catch(() => { if (!cancelled) setSummary(null); });
+//     return () => { cancelled = true; };
+//   }, [currentUser?.token, summaryKey]);
+
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [statusFilter, setStatusFilter] = useState('ALL');
+//   const [expiryFilter, setExpiryFilter] = useState('ALL');
+
+//   const rows = useMemo(
+//     () => inventory.filter(inv => inv.pharmacyId === pharmacyId).map(inv => ({ ...inv, medicine: MEDICINES.find(m => m.id === inv.medicineId) })).filter(r => r.medicine),
+//     [inventory, pharmacyId]
+//   );
+
+//   // const totalMedicines = rows.length;
+//   // const totalStock = rows.reduce((s, r) => s + r.quantity, 0);
+//   // const lowStock = rows.filter(r => r.status === 'LOW_STOCK').length;
+//   // const outOfStock = rows.filter(r => r.status === 'OUT_OF_STOCK').length;
+//   // const expiringSoon = rows.filter(r => { const d = daysUntil(r.expiryDate); return d >= 0 && d <= 30; }).length;
+//   const totalMedicines = summary?.totalMedicines ?? 0;
+//   const totalStock = summary?.totalUnits ?? 0;
+//   const lowStock = summary?.lowStock ?? 0;
+//   const outOfStock = summary?.outOfStock ?? 0;
+//   const expiringSoon = summary?.expiringSoon ?? 0;
+
+//   const lowStockAlerts = rows.filter(r => r.status === 'LOW_STOCK' || r.status === 'OUT_OF_STOCK');
+
+//   const demandRows = rows.map(r => {
+//     const demand = MEDICINE_SEARCH_DEMAND[r.medicineId] || 0;
+//     let recommendation = 'Sufficient';
+//     if (r.quantity === 0 && demand > 0) recommendation = 'Restock urgently';
+//     else if (demand > r.quantity) recommendation = 'Restock soon';
+//     return { ...r, demand, recommendation };
+//   });
+
+//   return (
+//     <div className="flex flex-col gap-5">
+//       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+//         <SummaryCard label="Total Medicines" value={totalMedicines} />
+//         <SummaryCard label="Total Stock (units)" value={totalStock} />
+//         <SummaryCard label="Low Stock" value={lowStock} tone="warning" />
+//         <SummaryCard label="Out of Stock" value={outOfStock} tone="danger" />
+//         <SummaryCard label="Expiring Soon (30d)" value={expiringSoon} tone="warning" />
+//       </div>
+
+//       {lowStockAlerts.length > 0 && (
+//         <div className="rounded-2xl border border-warning/25 bg-warning/5 p-4">
+//           <p className="flex items-center gap-1.5 text-sm font-medium text-ink mb-2">
+//             <AlertTriangle size={15} className="text-warning" /> Low Stock Alerts
+//           </p>
+//           <div className="flex flex-wrap gap-2">
+//             {lowStockAlerts.map(r => (
+//               <span key={r.id} className="text-xs px-2.5 py-1 rounded-lg bg-surface border border-warning/30 text-ink">
+//                 {r.medicine.brand} — {r.quantity} left
+//               </span>
+//             ))}
+//           </div>
+//         </div>
+//       )}
+
+//       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+//         <InventoryStockChart inventory={inventory} pharmacyId={pharmacyId} />
+//         <SalesReservationChart />
+//       </div>
+
+//       <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+//         <h3 className="font-display font-semibold text-ink text-[15px] mb-3">Medicine Demand vs Current Stock</h3>
+//         <div className="overflow-x-auto">
+//           <table className="w-full text-sm">
+//             <thead>
+//               <tr className="text-ink-soft text-xs uppercase tracking-wide border-b border-border">
+//                 <th className="text-left font-medium px-3 py-2">Medicine</th>
+//                 <th className="text-left font-medium px-3 py-2">Current Stock</th>
+//                 <th className="text-left font-medium px-3 py-2">Demand (searches)</th>
+//                 <th className="text-left font-medium px-3 py-2">Recommendation</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {demandRows.map(r => (
+//                 <tr key={r.id} className="border-b border-border last:border-0">
+//                   <td className="px-3 py-2 font-medium text-ink">{r.medicine.brand}</td>
+//                   <td className="px-3 py-2 text-ink-soft">{r.quantity}</td>
+//                   <td className="px-3 py-2 text-ink-soft">{r.demand}</td>
+//                   <td className="px-3 py-2">
+//                     <Badge variant={r.recommendation === 'Sufficient' ? 'success' : r.recommendation === 'Restock soon' ? 'warning' : 'danger'}>
+//                       {r.recommendation}
+//                     </Badge>
+//                   </td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+
+//       <div>
+//         <h3 className="font-display font-semibold text-ink text-[15px] mb-3">Expiry Management</h3>
+//         <div className="flex gap-2 mb-3 flex-wrap">
+//           {[['ALL', 'All'], ['7', 'Next 7 days'], ['30', 'Next 30 days'], ['90', 'Next 90 days'], ['EXPIRED', 'Expired']].map(([val, label]) => (
+//             <button
+//               key={val}
+//               onClick={() => setExpiryFilter(val)}
+//               className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${expiryFilter === val ? 'bg-primary text-white border-primary' : 'bg-app text-ink-soft border-border hover:border-primary/40'}`}
+//             >
+//               {label}
+//             </button>
+//           ))}
+//         </div>
+
+//         <div className="flex flex-col sm:flex-row gap-2 mb-3">
+//           <div className="relative flex-1 max-w-xs">
+//             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
+//             <input
+//               value={searchTerm}
+//               onChange={e => setSearchTerm(e.target.value)}
+//               placeholder="Search medicine or salt…"
+//               className="w-full h-9 pl-8 pr-3 rounded-lg border border-border bg-app text-sm outline-none focus:border-primary/50"
+//             />
+//           </div>
+//           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="h-9 px-3 rounded-lg border border-border bg-app text-sm outline-none focus:border-primary/50">
+//             <option value="ALL">All stock levels</option>
+//             <option value="IN_STOCK">In Stock</option>
+//             <option value="LOW_STOCK">Low Stock</option>
+//             <option value="OUT_OF_STOCK">Out of Stock</option>
+//           </select>
+//         </div>
+
+//         {/* <InventoryTable pharmacyId={pharmacyId} searchTerm={searchTerm} statusFilter={statusFilter} expiryFilter={expiryFilter} /> */}
+//         <InventoryTable searchTerm={searchTerm} statusFilter={statusFilter} onChanged={() => setSummaryKey(k => k + 1)} />
+//       </div>
+//     </div>
+//   );
+// }
+function InventoryTab() {
+  const { currentUser } = useApp();
+  const token = currentUser?.token;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [expiryFilter, setExpiryFilter] = useState('ALL');
+  const [summary, setSummary] = useState(null);
+  const [lowStockItems, setLowStockItems] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const rows = useMemo(
-    () => inventory.filter(inv => inv.pharmacyId === pharmacyId).map(inv => ({ ...inv, medicine: MEDICINES.find(m => m.id === inv.medicineId) })).filter(r => r.medicine),
-    [inventory, pharmacyId]
-  );
-
-  const totalMedicines = rows.length;
-  const totalStock = rows.reduce((s, r) => s + r.quantity, 0);
-  const lowStock = rows.filter(r => r.status === 'LOW_STOCK').length;
-  const outOfStock = rows.filter(r => r.status === 'OUT_OF_STOCK').length;
-  const expiringSoon = rows.filter(r => { const d = daysUntil(r.expiryDate); return d >= 0 && d <= 30; }).length;
-
-  const lowStockAlerts = rows.filter(r => r.status === 'LOW_STOCK' || r.status === 'OUT_OF_STOCK');
-
-  const demandRows = rows.map(r => {
-    const demand = MEDICINE_SEARCH_DEMAND[r.medicineId] || 0;
-    let recommendation = 'Sufficient';
-    if (r.quantity === 0 && demand > 0) recommendation = 'Restock urgently';
-    else if (demand > r.quantity) recommendation = 'Restock soon';
-    return { ...r, demand, recommendation };
-  });
+  // summary cards, chart and alerts all come from the backend; refreshKey reloads them after any stock change
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      ownerInventoryApi.summary(token),
+      ownerInventoryApi.list({ status: 'LOW_STOCK', size: 8 }, token)
+    ])
+      .then(([sum, low]) => {
+        if (!cancelled) {
+          setSummary(sum);
+          setLowStockItems(low.content);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSummary(null);
+          setLowStockItems([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, refreshKey]);
 
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <SummaryCard label="Total Medicines" value={totalMedicines} />
-        <SummaryCard label="Total Stock (units)" value={totalStock} />
-        <SummaryCard label="Low Stock" value={lowStock} tone="warning" />
-        <SummaryCard label="Out of Stock" value={outOfStock} tone="danger" />
-        <SummaryCard label="Expiring Soon (30d)" value={expiringSoon} tone="warning" />
+        <SummaryCard label="Total Medicines" value={summary?.totalMedicines ?? 0} />
+        <SummaryCard label="Total Stock (units)" value={summary?.totalUnits ?? 0} />
+        <SummaryCard label="Low Stock" value={summary?.lowStock ?? 0} tone="warning" />
+        <SummaryCard label="Out of Stock" value={summary?.outOfStock ?? 0} tone="danger" />
+        <SummaryCard label="Expiring Soon (30d)" value={summary?.expiringSoon ?? 0} tone="warning" />
       </div>
 
-      {lowStockAlerts.length > 0 && (
+      {lowStockItems.length > 0 && (
         <div className="rounded-2xl border border-warning/25 bg-warning/5 p-4">
           <p className="flex items-center gap-1.5 text-sm font-medium text-ink mb-2">
             <AlertTriangle size={15} className="text-warning" /> Low Stock Alerts
           </p>
           <div className="flex flex-wrap gap-2">
-            {lowStockAlerts.map(r => (
+            {lowStockItems.map(r => (
               <span key={r.id} className="text-xs px-2.5 py-1 rounded-lg bg-surface border border-warning/30 text-ink">
-                {r.medicine.brand} — {r.quantity} left
+                {r.brandName} — {r.quantity} left
               </span>
             ))}
+            {summary && summary.lowStock > lowStockItems.length && (
+              <button
+                onClick={() => setStatusFilter('LOW_STOCK')}
+                className="text-xs px-2.5 py-1 rounded-lg text-primary font-medium"
+              >
+                +{summary.lowStock - lowStockItems.length} more
+              </button>
+            )}
           </div>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <InventoryStockChart inventory={inventory} pharmacyId={pharmacyId} />
+        <InventoryStockChart summary={summary} />
         <SalesReservationChart />
-      </div>
-
-      <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-        <h3 className="font-display font-semibold text-ink text-[15px] mb-3">Medicine Demand vs Current Stock</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-ink-soft text-xs uppercase tracking-wide border-b border-border">
-                <th className="text-left font-medium px-3 py-2">Medicine</th>
-                <th className="text-left font-medium px-3 py-2">Current Stock</th>
-                <th className="text-left font-medium px-3 py-2">Demand (searches)</th>
-                <th className="text-left font-medium px-3 py-2">Recommendation</th>
-              </tr>
-            </thead>
-            <tbody>
-              {demandRows.map(r => (
-                <tr key={r.id} className="border-b border-border last:border-0">
-                  <td className="px-3 py-2 font-medium text-ink">{r.medicine.brand}</td>
-                  <td className="px-3 py-2 text-ink-soft">{r.quantity}</td>
-                  <td className="px-3 py-2 text-ink-soft">{r.demand}</td>
-                  <td className="px-3 py-2">
-                    <Badge variant={r.recommendation === 'Sufficient' ? 'success' : r.recommendation === 'Restock soon' ? 'warning' : 'danger'}>
-                      {r.recommendation}
-                    </Badge>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
 
       <div>
@@ -161,12 +292,16 @@ function InventoryTab({ pharmacyId }) {
           </select>
         </div>
 
-        <InventoryTable pharmacyId={pharmacyId} searchTerm={searchTerm} statusFilter={statusFilter} expiryFilter={expiryFilter} />
+        <InventoryTable
+          searchTerm={searchTerm}
+          statusFilter={statusFilter}
+          expiryFilter={expiryFilter}
+          onChanged={() => setRefreshKey(k => k + 1)}
+        />
       </div>
     </div>
   );
 }
-
 function ReservationRequests({ pharmacyId }) {
   const { reservations, updateReservationStatus } = useApp();
   const rows = useMemo(
@@ -251,7 +386,19 @@ function UnmetDemandTab() {
 export default function PharmacyDashboard() {
   const { tab } = useParams();
   const navigate = useNavigate();
+  // const { reservations, currentUser } = useApp();
   const { reservations, currentUser } = useApp();
+  const [myPharmacy, setMyPharmacy] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    pharmacyApi
+      .me(currentUser?.token)
+      .then(data => { if (!cancelled) setMyPharmacy(data); })
+      .catch(() => { if (!cancelled) setMyPharmacy(null); });
+    return () => { cancelled = true; };
+  }, [currentUser?.token]);
+
   const pharmacyId = currentUser?.pharmacyId || 'ph_1';
   const activeTab = VALID_TABS.includes(tab) ? tab : 'inventory';
   const pendingCount = reservations.filter(r => r.pharmacyId === pharmacyId && r.status === 'PENDING').length;
@@ -260,7 +407,10 @@ export default function PharmacyDashboard() {
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="font-display font-semibold text-xl text-ink">Pharmacy Dashboard</h1>
-        <p className="text-sm text-ink-soft mt-0.5">Wellness Plus Pharmacy · FC Road, Shivajinagar</p>
+        {/* <p className="text-sm text-ink-soft mt-0.5">Wellness Plus Pharmacy · FC Road, Shivajinagar</p> */}
+        <p className="text-sm text-ink-soft mt-0.5">
+          {myPharmacy ? `${myPharmacy.name} · ${myPharmacy.address}` : 'Loading pharmacy...'}
+        </p>
       </div>
 
       <div className="flex gap-1.5 border-b border-border">

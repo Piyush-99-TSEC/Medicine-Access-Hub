@@ -58,3 +58,12 @@ export const medicineApi = {
   availability: (id, lat, lng, radiusKm) =>
     api(`/api/v1/medicines/${id}/availability?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`)
 };
+
+export const ownerInventoryApi = {
+  list: ({ q = '', status = 'ALL', expiry = 'ALL', page = 0, size = 20 } = {}, token) =>
+    api(`/api/v1/pharmacies/me/inventory?q=${encodeURIComponent(q)}&status=${status}&expiry=${expiry}&page=${page}&size=${size}`, { token }),
+  summary: token => api('/api/v1/pharmacies/me/inventory/summary', { token }),
+  save: (body, token) => api('/api/v1/pharmacies/me/inventory', { method: 'POST', body, token }),
+  update: (id, body, token) => api(`/api/v1/pharmacies/me/inventory/${id}`, { method: 'PUT', body, token }),
+  remove: (id, token) => api(`/api/v1/pharmacies/me/inventory/${id}`, { method: 'DELETE', token })
+};
