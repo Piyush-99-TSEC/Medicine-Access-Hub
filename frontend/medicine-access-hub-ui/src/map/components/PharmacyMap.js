@@ -41,8 +41,7 @@ export default function PharmacyMap({ results = [], userLocation, selectedRoute,
         ))}
 
         {selectedRoute && (
-          <RoutePolyline start={userLocation} end={selectedRoute.pharmacy} distanceKm={selectedRoute.distanceKm} />
-        )}
+          <RoutePolyline start={userLocation} end={selectedRoute.pharmacy} distanceKm={selectedRoute.distanceKm} path={selectedRoute.path} />        )}
       </MapContainer>
     </div>
   );

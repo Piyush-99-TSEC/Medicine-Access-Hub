@@ -121,14 +121,16 @@ import { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { Minus, Plus, Clock, CheckCircle2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
-import { MEDICINES } from '../../mock/mockData';
+import { reservationApi } from '../../api/client.js';
 
 const STEPS = { REVIEW: 'REVIEW', CONFIRMED: 'CONFIRMED' };
 
 export default function Checkout() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { pharmacies, createReservation } = useApp();
+  const { currentUser } = useApp();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [step, setStep] = useState(STEPS.REVIEW);
   const [quantity, setQuantity] = useState(1);
 
@@ -143,22 +145,22 @@ export default function Checkout() {
     );
   }
 
-  const { pharmacyId, medicineId, price, maxQuantity, inventoryId } = state;
-  const pharmacy = pharmacies.find(p => p.id === pharmacyId);
-  const medicine = MEDICINES.find(m => m.id === medicineId);
+  const { pharmacyId, medicineId, price, maxQuantity, medicineName, pharmacyName, pharmacyAddress } = state;
+  const pharmacy = { name: pharmacyName, address: pharmacyAddress };
+  const medicine = { brand: medicineName };
   const total = price * quantity;
 
-  function handleReserve() {
-    createReservation({
-      userId: 'patient_demo',
-      userName: 'Ananya Rao',
-      pharmacyId,
-      medicineId,
-      inventoryId,
-      quantity,
-      totalAmount: total
-    });
-    setStep(STEPS.CONFIRMED);
+  async function handleReserve() {
+    setSubmitting(true);
+    setError('');
+    try {
+      await reservationApi.create({ pharmacyId, medicineId, quantity }, currentUser.token);
+      setStep(STEPS.CONFIRMED);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -203,8 +205,9 @@ export default function Checkout() {
               <Clock size={13} /> Stock will be held for 15 minutes after you reserve.
             </div>
 
-            <button onClick={handleReserve} className="w-full h-11 rounded-xl bg-primary text-white font-medium text-sm hover:bg-primary-hover transition-colors">
-              Reserve
+            {error && <p className="text-xs text-danger">{error}</p>}
+            <button onClick={handleReserve} disabled={submitting} className="w-full h-11 rounded-xl bg-primary text-white font-medium text-sm hover:bg-primary-hover transition-colors disabled:opacity-60">
+              {submitting ? 'Sending...' : 'Reserve'}
             </button>
           </div>
         )}

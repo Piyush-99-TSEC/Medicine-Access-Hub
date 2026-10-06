@@ -468,7 +468,10 @@ export default function SearchResults() {
         medicineId: activeMedicine.id,
         inventoryId: result.inventoryId,
         price: result.price,
-        maxQuantity: result.quantity
+        maxQuantity: result.quantity,
+        medicineName: activeMedicine.brand,
+        pharmacyName: result.pharmacy.name,
+        pharmacyAddress: result.pharmacy.address
       }
     });
   }

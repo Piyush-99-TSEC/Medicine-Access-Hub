@@ -74,3 +74,18 @@ export const ownerInventoryApi = {
   update: (id, body, token) => api(`/api/v1/pharmacies/me/inventory/${id}`, { method: 'PUT', body, token }),
   remove: (id, token) => api(`/api/v1/pharmacies/me/inventory/${id}`, { method: 'DELETE', token })
 };
+
+export const reservationApi = {
+  create: (body, token) => api('/api/v1/reservations', { method: 'POST', body, token }),
+  listMine: token => api('/api/v1/reservations', { token }),
+  cancel: (id, token) => api(`/api/v1/reservations/${id}/cancel`, { method: 'PATCH', token }),
+  route: (id, lat, lng, token) => api(`/api/v1/reservations/${id}/route?lat=${lat}&lng=${lng}`, { token })
+};
+
+export const ownerReservationApi = {
+  list: (status, token) =>
+    api(`/api/v1/pharmacies/me/reservations${status ? `?status=${status}` : ''}`, { token }),
+  accept: (id, token) => api(`/api/v1/pharmacies/me/reservations/${id}/accept`, { method: 'PATCH', token }),
+  reject: (id, token) => api(`/api/v1/pharmacies/me/reservations/${id}/reject`, { method: 'PATCH', token }),
+  collect: (id, token) => api(`/api/v1/pharmacies/me/reservations/${id}/collect`, { method: 'PATCH', token })
+};

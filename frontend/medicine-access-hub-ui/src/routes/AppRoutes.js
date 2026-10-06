@@ -11,6 +11,7 @@ import AdminDashboard from '../admin/views/AdminDashboard.js';
 import ProtectedRoute from './ProtectedRoute.js';
 import { useApp } from '../context/AppContext.js';
 import { ROLES } from '../mock/mockData';
+import ReservationRoute from '../reservations/views/ReservationRoute.js';
 
 const HOME_BY_ROLE = {
   [ROLES.PATIENT]: '/search',
@@ -66,6 +67,15 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={[ROLES.PATIENT]}>
             <Checkout />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/reservations/:id/route"
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.PATIENT]}>
+            <ReservationRoute />
           </ProtectedRoute>
         }
       />

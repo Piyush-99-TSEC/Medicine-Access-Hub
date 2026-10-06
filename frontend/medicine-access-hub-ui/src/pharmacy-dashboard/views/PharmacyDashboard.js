@@ -10,7 +10,7 @@ import { MEDICINES, MEDICINE_SEARCH_DEMAND, UNMET_DEMAND_CLUSTERS, UNMET_DEMAND_
 import Badge, { stockBadgeLabel, stockBadgeVariant } from '../../components/Badge.js';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler } from 'chart.js';
-import { ownerInventoryApi } from '../../api/client';
+import { ownerInventoryApi, ownerReservationApi } from '../../api/client';
 import { pharmacyApi } from '../../api/client';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
@@ -18,7 +18,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 const TABS = [
   { key: 'inventory', label: 'Inventory', icon: Boxes },
   { key: 'reservations', label: 'Reservations', icon: ClipboardList },
-  { key: 'unmet-demand', label: 'Unmet Demand', icon: MapPinned }
+  // { key: 'unmet-demand', label: 'Unmet Demand', icon: MapPinned }
 ];
 const VALID_TABS = TABS.map(t => t.key);
 
@@ -302,31 +302,63 @@ function InventoryTab() {
     </div>
   );
 }
-function ReservationRequests({ pharmacyId }) {
-  const { reservations, updateReservationStatus } = useApp();
-  const rows = useMemo(
-    () => reservations.filter(r => r.pharmacyId === pharmacyId).map(r => ({ ...r, medicine: MEDICINES.find(m => m.id === r.medicineId) })).sort((a, b) => b.createdAt - a.createdAt),
-    [reservations, pharmacyId]
-  );
+
+function ReservationRequests() {
+  const { currentUser } = useApp();
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [tick, setTick] = useState(0);
+
+  // Shows PENDING + CONFIRMED; polls so new customer requests appear on their own
+  useEffect(() => {
+    let cancelled = false;
+    const load = () =>
+      ownerReservationApi
+        .list(null, currentUser?.token)
+        .then(data => { if (!cancelled) setRows(data); })
+        .catch(err => { if (!cancelled) setError(err.message); })
+        .finally(() => { if (!cancelled) setLoading(false); });
+    load();
+    const t = setInterval(load, 15000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [currentUser?.token, tick]);
+
+  async function act(fn, id) {
+    setError('');
+    try {
+      await fn(id, currentUser.token);
+      setTick(t => t + 1);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-3">
-      {rows.length === 0 && <div className="rounded-xl border border-dashed border-border p-6 text-sm text-ink-soft text-center">No reservation requests yet.</div>}
+      {error && <p className="text-sm text-danger">{error}</p>}
+      {!loading && rows.length === 0 && <div className="rounded-xl border border-dashed border-border p-6 text-sm text-ink-soft text-center">No active reservation requests.</div>}
       {rows.map(r => (
         <div key={r.id} className="rounded-2xl border border-border bg-surface p-4 shadow-card flex items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <p className="font-medium text-ink text-sm">{r.medicine?.brand}</p>
+              <p className="font-medium text-ink text-sm">{r.medicineName}</p>
               <Badge variant={STATUS_VARIANT[r.status]}>{r.status}</Badge>
             </div>
-            <p className="text-xs text-ink-soft mt-1">{r.userName} · Qty {r.quantity} · ₹{r.totalAmount}</p>
-            <p className="text-[11px] text-ink-soft flex items-center gap-1 mt-0.5"><Clock3 size={11} /> Requested {timeAgo(r.createdAt)}</p>
+            <p className="text-xs text-ink-soft mt-1">{r.customerName} · {r.customerPhone} · Qty {r.quantity}</p>
+            <p className="text-[11px] text-ink-soft flex items-center gap-1 mt-0.5">
+              <Clock3 size={11} /> Requested {timeAgo(new Date(r.createdAt).getTime())}
+              {r.status === 'CONFIRMED' && ` · Collect by ${new Date(r.pickupBy).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+            </p>
           </div>
           {r.status === 'PENDING' && (
             <div className="flex gap-2 shrink-0">
-              <button onClick={() => updateReservationStatus(r.id, 'CONFIRMED')} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-success text-white text-xs font-medium hover:bg-success/90 transition-colors"><Check size={13} /> Accept</button>
-              <button onClick={() => updateReservationStatus(r.id, 'REJECTED')} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-danger/30 text-danger text-xs font-medium hover:bg-danger/5 transition-colors"><X size={13} /> Reject</button>
+              <button onClick={() => act(ownerReservationApi.accept, r.id)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-success text-white text-xs font-medium hover:bg-success/90 transition-colors"><Check size={13} /> Accept</button>
+              <button onClick={() => act(ownerReservationApi.reject, r.id)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-danger/30 text-danger text-xs font-medium hover:bg-danger/5 transition-colors"><X size={13} /> Reject</button>
             </div>
+          )}
+          {r.status === 'CONFIRMED' && (
+            <button onClick={() => act(ownerReservationApi.collect, r.id)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-hover transition-colors shrink-0"><Check size={13} /> Mark collected</button>
           )}
         </div>
       ))}
@@ -387,7 +419,8 @@ export default function PharmacyDashboard() {
   const { tab } = useParams();
   const navigate = useNavigate();
   // const { reservations, currentUser } = useApp();
-  const { reservations, currentUser } = useApp();
+  const { currentUser } = useApp();
+  const [pendingCount, setPendingCount] = useState(0);
   const [myPharmacy, setMyPharmacy] = useState(null);
 
   useEffect(() => {
@@ -399,9 +432,20 @@ export default function PharmacyDashboard() {
     return () => { cancelled = true; };
   }, [currentUser?.token]);
 
+  useEffect(() => {
+    const load = () =>
+      ownerReservationApi
+        .list('PENDING', currentUser?.token)
+        .then(data => setPendingCount(data.length))
+        .catch(() => {});
+    load();
+    const t = setInterval(load, 15000);
+    return () => clearInterval(t);
+  }, [currentUser?.token]);
+
   const pharmacyId = currentUser?.pharmacyId || 'ph_1';
   const activeTab = VALID_TABS.includes(tab) ? tab : 'inventory';
-  const pendingCount = reservations.filter(r => r.pharmacyId === pharmacyId && r.status === 'PENDING').length;
+  // const pendingCount = reservations.filter(r => r.pharmacyId === pharmacyId && r.status === 'PENDING').length;
 
   return (
     <div className="flex flex-col gap-5">
@@ -434,8 +478,8 @@ export default function PharmacyDashboard() {
       </div>
 
       {activeTab === 'inventory' && <InventoryTab pharmacyId={pharmacyId} />}
-      {activeTab === 'reservations' && <ReservationRequests pharmacyId={pharmacyId} />}
-      {activeTab === 'unmet-demand' && <UnmetDemandTab />}
+      {activeTab === 'reservations' && <ReservationRequests />}
+      {/* {activeTab === 'unmet-demand' && <UnmetDemandTab />} */}
     </div>
   );
 }
