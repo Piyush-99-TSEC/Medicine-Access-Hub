@@ -13,7 +13,7 @@ const USER_ICON = coloredDivIcon('#6D28D9', 20);
 export default function PharmacyMap({ results = [], userLocation, selectedRoute, onSelectPharmacy, height = '100%' }) {
   return (
     <div className="rounded-2xl overflow-hidden border border-border shadow-card" style={{ height, minHeight: 360 }}>
-      <MapContainer center={[userLocation.lat, userLocation.lng]} zoom={12} scrollWheelZoom={false}>
+      <MapContainer center={[userLocation.lat, userLocation.lng]} zoom={13} scrollWheelZoom={false}>
         <TileLayer
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

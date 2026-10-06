@@ -54,5 +54,7 @@ export const adminPharmacyApi = {
 export const medicineApi = {
   search: (q, page = 0, size = 20) =>
     api(`/api/v1/medicines?q=${encodeURIComponent(q)}&page=${page}&size=${size}`),
-  getById: id => api(`/api/v1/medicines/${id}`)
+  getById: id => api(`/api/v1/medicines/${id}`),
+  availability: (id, lat, lng, radiusKm) =>
+    api(`/api/v1/medicines/${id}/availability?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`)
 };

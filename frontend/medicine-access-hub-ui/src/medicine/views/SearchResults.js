@@ -292,7 +292,7 @@
 //     </div>
 //   );
 // }
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, Clock, MapPinned, PackageCheck, Info } from 'lucide-react';
 import MedicineSearchCard from '../components/MedicineSearchCard.js';
@@ -300,20 +300,21 @@ import StripOcrModal from '../components/StripOcrModal.js';
 import MedicineDetailModal from '../components/MedicineDetailModal.js';
 import PharmacyMap from '../../map/components/PharmacyMap.js';
 import Badge, { stockBadgeLabel, stockBadgeVariant } from '../../components/Badge.js';
-import { useApp } from '../../context/AppContext.js';
+// import { useApp } from '../../context/AppContext.js';
 import { useGeolocation } from '../../hooks/useGeolocation.js';
-import {
-  haversineKm,
-  simulatedRoadDistanceKm,
-  rankPharmaciesWSM,
-  isPharmacyOpenNow,
-  getSubstitutes
-} from '../../mock/mockData';
+// import {
+//   haversineKm,
+//   simulatedRoadDistanceKm,
+//   rankPharmaciesWSM,
+//   isPharmacyOpenNow,
+//   getSubstitutes
+// } from '../../mock/mockData';
+import { rankPharmaciesWSM, isPharmacyOpenNow } from '../../mock/mockData';
 import { medicineApi } from '../../api/client';
 import { toUiMedicine } from '../../utils/medicineMapper';
 
 export default function SearchResults() {
-  const { inventory, pharmacies } = useApp();
+  // const { inventory, pharmacies } = useApp();
   const { location } = useGeolocation();
   const navigate = useNavigate();
 
@@ -352,34 +353,95 @@ export default function SearchResults() {
     }
   }
 
-  const rankedResults = useMemo(() => {
-    if (!activeMedicine) return [];
-    const candidates = inventory
-      .filter(inv => inv.medicineId === activeMedicine.id && inv.quantity > 0)
-      .map(inv => {
-        const pharmacy = pharmacies.find(p => p.id === inv.pharmacyId);
-        if (!pharmacy) return null;
-        const straightKm = haversineKm(location, pharmacy);
-        if (straightKm > radiusKm) return null;
-        return {
-          inventoryId: inv.id,
-          pharmacy,
-          quantity: inv.quantity,
-          price: inv.price,
-          status: inv.status,
-          rating: pharmacy.rating,
-          roadDistanceKm: simulatedRoadDistanceKm(location, pharmacy),
-          isOpenNow: isPharmacyOpenNow(pharmacy)
-        };
-      })
-      .filter(Boolean);
-    return rankPharmaciesWSM(candidates);
-  }, [activeMedicine, inventory, pharmacies, radiusKm, location]);
+  // const rankedResults = useMemo(() => {
+  //   if (!activeMedicine) return [];
+  //   const candidates = inventory
+  //     .filter(inv => inv.medicineId === activeMedicine.id && inv.quantity > 0)
+  //     .map(inv => {
+  //       const pharmacy = pharmacies.find(p => p.id === inv.pharmacyId);
+  //       if (!pharmacy) return null;
+  //       const straightKm = haversineKm(location, pharmacy);
+  //       if (straightKm > radiusKm) return null;
+  //       return {
+  //         inventoryId: inv.id,
+  //         pharmacy,
+  //         quantity: inv.quantity,
+  //         price: inv.price,
+  //         status: inv.status,
+  //         rating: pharmacy.rating,
+  //         roadDistanceKm: simulatedRoadDistanceKm(location, pharmacy),
+  //         isOpenNow: isPharmacyOpenNow(pharmacy)
+  //       };
+  //     })
+  //     .filter(Boolean);
+  //   return rankPharmaciesWSM(candidates);
+  // }, [activeMedicine, inventory, pharmacies, radiusKm, location]);
 
-  const substitutes = useMemo(() => {
-    if (!activeMedicine || rankedResults.length > 0) return [];
-    return getSubstitutes(activeMedicine.id).filter(sub => inventory.some(inv => inv.medicineId === sub.id && inv.quantity > 0));
-  }, [activeMedicine, rankedResults, inventory]);
+  // const substitutes = useMemo(() => {
+  //   if (!activeMedicine || rankedResults.length > 0) return [];
+  //   return getSubstitutes(activeMedicine.id).filter(sub => inventory.some(inv => inv.medicineId === sub.id && inv.quantity > 0));
+  // }, [activeMedicine, rankedResults, inventory]);
+
+    const [availability, setAvailability] = useState([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+
+  // Real stock near the user, from the backend (inventory table + distance filter).
+  useEffect(() => {
+    if (!activeMedicine) {
+      setAvailability([]);
+      return undefined;
+    }
+    let cancelled = false;
+    setAvailabilityLoading(true);
+    setError('');
+    medicineApi
+      .availability(activeMedicine.id, location.lat, location.lng, radiusKm)
+      .then(rows => {
+        if (!cancelled) setAvailability(rows);
+      })
+      .catch(err => {
+        if (!cancelled) {
+          setAvailability([]);
+          setError(err.message);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setAvailabilityLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeMedicine, radiusKm, location.lat, location.lng]);
+
+  const rankedResults = useMemo(() => {
+    const candidates = availability.map(row => {
+      const pharmacy = {
+        id: row.pharmacyId,
+        name: row.pharmacyName,
+        address: row.address,
+        lat: row.latitude,
+        lng: row.longitude,
+        rating: Number(row.avgRating),
+        openTime: row.openTime,
+        closeTime: row.closeTime
+      };
+      return {
+        inventoryId: row.inventoryId,
+        pharmacy,
+        quantity: row.quantity,
+        price: Number(row.price),
+        status: row.quantity <= 10 ? 'LOW_STOCK' : 'IN_STOCK',
+        rating: pharmacy.rating,
+        // backend gives straight-line km; roads are roughly 25% longer
+        roadDistanceKm: +(row.distanceKm * 1.25).toFixed(2),
+        isOpenNow: isPharmacyOpenNow(pharmacy)
+      };
+    });
+    return rankPharmaciesWSM(candidates);
+  }, [availability]);
+
+  // Same-salt substitutes will come from the backend in a later step.
+  const substitutes = [];
 
   function handleOcrConfirm(medicine) {
     setOcrOpen(false);

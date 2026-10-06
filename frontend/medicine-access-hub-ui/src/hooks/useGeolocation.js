@@ -13,6 +13,9 @@ export function useGeolocation() {
   const [permissionState, setPermissionState] = useState('unknown'); // 'granted' | 'denied' | 'unavailable' | 'unknown'
 
   useEffect(() => {
+    // The demo pharmacies are all in Bandra, so real GPS is opt-in (VITE_USE_GPS=true).
+    if (import.meta.env.VITE_USE_GPS !== 'true') return;
+    
     if (!('geolocation' in navigator)) {
       setPermissionState('unavailable');
       return;

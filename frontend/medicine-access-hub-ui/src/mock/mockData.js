@@ -5,7 +5,8 @@
 // ---------------------------------------------------------------------------
 
 // export const USER_LOCATION = { lat: 18.5204, lng: 73.8567 };
-export const USER_LOCATION = { lat: 19.2170, lng: 73.1420 };
+// export const USER_LOCATION = { lat: 19.2170, lng: 73.1420 };
+export const USER_LOCATION = { lat: 19.0596, lng: 72.8295 };
 
 
 export const ROLES = {
