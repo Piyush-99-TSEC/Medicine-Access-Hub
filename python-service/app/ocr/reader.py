@@ -33,3 +33,7 @@ def candidate_lines(lines):
         seen.add(key)
         out.append(line)
     return out
+
+def read_scored(image_bytes, binarize=False):
+    result, _ = engine(preprocess(image_bytes, binarize))
+    return [(t[1], float(t[2])) for t in result or []]
