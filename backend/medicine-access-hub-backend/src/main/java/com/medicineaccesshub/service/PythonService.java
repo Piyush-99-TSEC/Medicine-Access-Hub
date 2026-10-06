@@ -15,4 +15,7 @@ public interface PythonService {
 
     /** Pharmacies ranked by road distance (A*) and weighted score. */
     Optional<List<Map<String, Object>>> rank(double lat, double lng, List<Map<String, Object>> pharmacies);
+
+    /** OCR result for a strip or box photo: extracted lines and top candidate medicines. */
+    Optional<Map<String, Object>> ocr(byte[] image, String filename);
 }

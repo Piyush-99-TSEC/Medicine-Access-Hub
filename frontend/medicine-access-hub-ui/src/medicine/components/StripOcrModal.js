@@ -1,33 +1,44 @@
 import { useState } from 'react';
 import { X, UploadCloud, ScanLine, CheckCircle2 } from 'lucide-react';
-import { OCR_SIMULATION_RESULTS, MEDICINES } from '../../mock/mockData';
+import { useApp } from '../../context/AppContext.js';
+import { medicineApi } from '../../api/client';
+import { toUiMedicine } from '../../utils/medicineMapper';
 
 const STEPS = { UPLOAD: 'UPLOAD', PROCESSING: 'PROCESSING', RESULT: 'RESULT' };
 
 export default function StripOcrModal({ open, onClose, onConfirm }) {
+  const { currentUser } = useApp();
+  const token = currentUser?.token;
+
   const [step, setStep] = useState(STEPS.UPLOAD);
   const [preview, setPreview] = useState(null);
   const [scanResult, setScanResult] = useState(null);
+  const [error, setError] = useState('');
 
   if (!open) return null;
 
   function reset() {
+    if (preview) URL.revokeObjectURL(preview);
     setStep(STEPS.UPLOAD);
     setPreview(null);
     setScanResult(null);
+    setError('');
   }
 
-  function handleFile(file) {
+  async function handleFile(file) {
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPreview(url);
+    setError('');
+    setPreview(URL.createObjectURL(file));
     setStep(STEPS.PROCESSING);
 
-    setTimeout(() => {
-      const mock = OCR_SIMULATION_RESULTS[Math.floor(Math.random() * OCR_SIMULATION_RESULTS.length)];
-      setScanResult(mock);
+    try {
+      const data = await medicineApi.scan(file, token);
+      setScanResult(data);
       setStep(STEPS.RESULT);
-    }, 1400);
+    } catch (err) {
+      setError(err.message);
+      setStep(STEPS.UPLOAD);
+    }
   }
 
   function handleClose() {
@@ -50,12 +61,17 @@ export default function StripOcrModal({ open, onClose, onConfirm }) {
 
         <div className="p-5">
           {step === STEPS.UPLOAD && (
-            <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl h-52 cursor-pointer hover:border-primary/40 hover:bg-primary-tint/40 transition-colors">
-              <UploadCloud size={28} className="text-primary" />
-              <p className="text-sm font-medium text-ink">Drop a photo, or click to upload</p>
-              <p className="text-xs text-ink-soft">JPG or PNG · Strip, box, prescription, or blister pack</p>
-              <input type="file" accept="image/*" className="hidden" onChange={e => handleFile(e.target.files?.[0])} />
-            </label>
+            <div className="flex flex-col gap-3">
+              {error && (
+                <p className="rounded-lg border border-danger/25 bg-danger/5 px-3 py-2 text-xs text-danger">{error}</p>
+              )}
+              <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl h-52 cursor-pointer hover:border-primary/40 hover:bg-primary-tint/40 transition-colors">
+                <UploadCloud size={28} className="text-primary" />
+                <p className="text-sm font-medium text-ink">Drop a photo, or click to upload</p>
+                <p className="text-xs text-ink-soft">JPG or PNG · Medicine strip or box · Max 5 MB</p>
+                <input type="file" accept="image/*" className="hidden" onChange={e => handleFile(e.target.files?.[0])} />
+              </label>
+            </div>
           )}
 
           {step === STEPS.PROCESSING && (
@@ -65,7 +81,7 @@ export default function StripOcrModal({ open, onClose, onConfirm }) {
               )}
               <div className="flex items-center gap-2 text-sm text-ink-soft">
                 <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                CLAHE contrast enhancement &amp; EasyOCR extraction…
+                Enhancing contrast &amp; reading text…
               </div>
               <div className="w-full max-w-xs h-1.5 rounded-full bg-app overflow-hidden">
                 <div className="h-full bg-primary animate-pulse w-2/3" />
@@ -80,9 +96,9 @@ export default function StripOcrModal({ open, onClose, onConfirm }) {
                   <img src={preview} alt="Uploaded strip" className="w-20 h-20 object-cover rounded-lg border border-border shrink-0" />
                 )}
                 <div>
-                  <p className="text-xs text-ink-soft mb-1">Raw extracted tokens</p>
+                  <p className="text-xs text-ink-soft mb-1">Extracted text</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {scanResult.rawTokens.map((t, i) => (
+                    {scanResult.lines.slice(0, 8).map((t, i) => (
                       <span key={i} className="px-2 py-0.5 rounded-md bg-app border border-border text-[11px] font-mono text-ink-soft">
                         {t}
                       </span>
@@ -91,35 +107,45 @@ export default function StripOcrModal({ open, onClose, onConfirm }) {
                 </div>
               </div>
 
-              <div>
-                <p className="text-xs text-ink-soft mb-2">Confirm the correct match — top {scanResult.candidates.length} candidates</p>
-                <div className="flex flex-col gap-2">
-                  {scanResult.candidates.map((medId, i) => {
-                    const med = MEDICINES.find(m => m.id === medId);
-                    if (!med) return null;
-                    return (
-                      <button
-                        key={medId}
-                        onClick={() => onConfirm(med)}
-                        className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border border-border hover:border-primary/50 hover:bg-primary-tint/40 transition-colors text-left"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-ink">{med.brand}</p>
-                          <p className="text-xs text-ink-soft">{med.salt} · {med.strength} · {med.manufacturer}</p>
-                        </div>
-                        <span className="flex items-center gap-1 text-xs font-medium text-primary shrink-0">
-                          {Math.round(scanResult.confidence[i] * 100)}%
-                          <CheckCircle2 size={14} />
-                        </span>
-                      </button>
-                    );
-                  })}
+              {scanResult.candidates.length > 0 ? (
+                <div>
+                  <p className="text-xs text-ink-soft mb-2">Confirm the correct match — top {scanResult.candidates.length} candidates</p>
+                  <div className="flex flex-col gap-2">
+                    {scanResult.candidates.map(c => {
+                      const med = toUiMedicine(c.medicine);
+                      return (
+                        <button
+                          key={med.id}
+                          onClick={() => { reset(); onConfirm(med); }}
+                          className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border border-border hover:border-primary/50 hover:bg-primary-tint/40 transition-colors text-left"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-ink">{med.brand}</p>
+                            <p className="text-xs text-ink-soft">{med.salt} · {med.strength} · {med.manufacturer}</p>
+                          </div>
+                          <span className="flex items-center gap-1 text-xs font-medium text-primary shrink-0">
+                            {Math.round(c.confidence * 100)}%
+                            <CheckCircle2 size={14} />
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <p className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-ink-soft">
+                  No matching medicine found in this photo.
+                </p>
+              )}
 
-              <p className="text-[11px] text-ink-soft">
-                None of these correct? Try retaking the photo with better lighting, or search by name instead.
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] text-ink-soft">
+                  None correct? Retake with better lighting, or search by name.
+                </p>
+                <button onClick={reset} className="text-xs font-medium text-primary shrink-0">
+                  Scan again
+                </button>
+              </div>
             </div>
           )}
         </div>

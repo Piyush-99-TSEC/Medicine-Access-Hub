@@ -71,6 +71,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/pharmacies/me/inventory/**").hasRole("PHARMACY_OWNER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/pharmacies/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/medicines/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/medicines/scan").hasRole("PATIENT")
                         .requestMatchers("/api/v1/auth/me").authenticated()
                         .anyRequest().authenticated()
                 )

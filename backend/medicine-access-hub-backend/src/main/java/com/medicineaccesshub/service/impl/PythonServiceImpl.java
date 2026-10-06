@@ -7,6 +7,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.time.Duration;
 import java.util.List;
@@ -23,6 +27,11 @@ public class PythonServiceImpl implements PythonService {
     @Value("${python.service.timeout-ms:3000}")
     private int timeoutMs;
 
+    @Value("${python.service.ocr-timeout-ms:20000}")
+    private int ocrTimeoutMs;
+
+    private RestClient ocrClient;
+
     private RestClient client;
 
     @PostConstruct
@@ -31,6 +40,10 @@ public class PythonServiceImpl implements PythonService {
         factory.setConnectTimeout(Duration.ofMillis(timeoutMs));
         factory.setReadTimeout(Duration.ofMillis(timeoutMs));
         client = RestClient.builder().baseUrl(baseUrl).requestFactory(factory).build();
+        SimpleClientHttpRequestFactory ocrFactory = new SimpleClientHttpRequestFactory();
+        ocrFactory.setConnectTimeout(Duration.ofMillis(timeoutMs));
+        ocrFactory.setReadTimeout(Duration.ofMillis(ocrTimeoutMs));
+        ocrClient = RestClient.builder().baseUrl(baseUrl).requestFactory(ocrFactory).build();
     }
 
     @Override
@@ -61,6 +74,29 @@ public class PythonServiceImpl implements PythonService {
             return Optional.ofNullable(res);
         } catch (Exception e) {
             log.warn("Python /rank failed: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Optional<Map<String, Object>> ocr(byte[] image, String filename) {
+        try {
+            MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+            // The filename is what makes FastAPI treat the part as an UploadFile
+            parts.add("file", new ByteArrayResource(image) {
+                @Override
+                public String getFilename() {
+                    return filename;
+                }
+            });
+            Map<String, Object> res = ocrClient.post().uri("/ocr")
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(parts)
+                    .retrieve().body(Map.class);
+            return Optional.ofNullable(res);
+        } catch (Exception e) {
+            log.warn("Python /ocr failed: {}", e.getMessage());
             return Optional.empty();
         }
     }

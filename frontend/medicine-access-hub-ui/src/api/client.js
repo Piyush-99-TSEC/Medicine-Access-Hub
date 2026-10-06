@@ -5,13 +5,15 @@ const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 export async function api(path, { method = 'GET', body, token } = {}) {
   let res;
   try {
+    const isForm = body instanceof FormData;
     res = await fetch(`${BASE}${path}`, {
       method,
       headers: {
-        'Content-Type': 'application/json',
+        // For FormData the browser sets the multipart boundary itself
+        ...(isForm ? {} : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
-      body: body ? JSON.stringify(body) : undefined
+      body: body ? (isForm ? body : JSON.stringify(body)) : undefined
     });
   } catch {
     throw new Error('Cannot reach the server. Is the backend running?');
@@ -56,7 +58,12 @@ export const medicineApi = {
     api(`/api/v1/medicines?q=${encodeURIComponent(q)}&page=${page}&size=${size}`),
   getById: id => api(`/api/v1/medicines/${id}`),
   availability: (id, lat, lng, radiusKm) =>
-    api(`/api/v1/medicines/${id}/availability?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`)
+    api(`/api/v1/medicines/${id}/availability?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`),
+  scan: (file, token) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api('/api/v1/medicines/scan', { method: 'POST', body: form, token });
+  }
 };
 
 export const ownerInventoryApi = {

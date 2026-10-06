@@ -247,11 +247,11 @@ export const UNMET_DEMAND_TREND = [
 // ---------------------------------------------------------------------------
 // OCR simulation dataset — used by the Strip/Box scan modal
 // ---------------------------------------------------------------------------
-export const OCR_SIMULATION_RESULTS = [
-  // { rawTokens: ['PARAGETAMOI', '650', 'MG', 'TAB'], candidates: ['med_1', 'med_2', 'med_3'], confidence: [0.91, 0.74, 0.52] },
-  { rawTokens: ['TEIMISARTAN', '40', 'MG'], candidates: ['med_4', 'med_5'], confidence: [0.88, 0.81] },
-  // { rawTokens: ['AZITHRAL', '500'], candidates: ['med_10'], confidence: [0.95] }
-];
+// export const OCR_SIMULATION_RESULTS = [
+//   // { rawTokens: ['PARAGETAMOI', '650', 'MG', 'TAB'], candidates: ['med_1', 'med_2', 'med_3'], confidence: [0.91, 0.74, 0.52] },
+//   { rawTokens: ['TEIMISARTAN', '40', 'MG'], candidates: ['med_4', 'med_5'], confidence: [0.88, 0.81] },
+//   // { rawTokens: ['AZITHRAL', '500'], candidates: ['med_10'], confidence: [0.95] }
+// ];
 
 // ---------------------------------------------------------------------------
 // Admin: pharmacy verification queue

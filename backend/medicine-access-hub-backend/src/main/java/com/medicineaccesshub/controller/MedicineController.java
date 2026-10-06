@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.medicineaccesshub.dto.response.OcrScanResponse;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -51,5 +55,12 @@ public class MedicineController {
             @RequestParam(defaultValue = "5") double radiusKm) {
         return ResponseEntity.ok(ApiResponse.success("Availability fetched successfully",
                 inventoryService.findAvailability(id, lat, lng, radiusKm)));
+    }
+
+    // Strip / box photo -> top matching medicines for the patient to confirm.
+    @PostMapping(value = "/scan", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<OcrScanResponse>> scan(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.success("Strip scanned successfully",
+                medicineService.scanStrip(file)));
     }
 }
