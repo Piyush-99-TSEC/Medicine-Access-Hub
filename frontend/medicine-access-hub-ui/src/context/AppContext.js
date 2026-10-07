@@ -64,43 +64,43 @@ export function AppProvider({ children }) {
     return user;
   }, []);
 
-  const createReservation = useCallback((reservation) => {
-    setReservations(prev => [
-      { ...reservation, id: `res_${Date.now()}`, status: 'PENDING', createdAt: Date.now(), holdMinutes: 15 },
-      ...prev
-    ]);
-    setInventory(prev =>
-      prev.map(inv =>
-        inv.pharmacyId === reservation.pharmacyId && inv.medicineId === reservation.medicineId
-          ? { ...inv, quantity: Math.max(0, inv.quantity - reservation.quantity) }
-          : inv
-      )
-    );
-    showToast('Medicine reserved. Hold expires in 15 minutes.', 'success');
-  }, [showToast]);
+  // const createReservation = useCallback((reservation) => {
+  //   setReservations(prev => [
+  //     { ...reservation, id: `res_${Date.now()}`, status: 'PENDING', createdAt: Date.now(), holdMinutes: 15 },
+  //     ...prev
+  //   ]);
+  //   setInventory(prev =>
+  //     prev.map(inv =>
+  //       inv.pharmacyId === reservation.pharmacyId && inv.medicineId === reservation.medicineId
+  //         ? { ...inv, quantity: Math.max(0, inv.quantity - reservation.quantity) }
+  //         : inv
+  //     )
+  //   );
+  //   showToast('Medicine reserved. Hold expires in 15 minutes.', 'success');
+  // }, [showToast]);
 
-  const updateReservationStatus = useCallback((id, status) => {
-    setReservations(prev => prev.map(r => (r.id === id ? { ...r, status } : r)));
-    showToast(
-      status === 'CONFIRMED' ? 'Reservation confirmed.' : status === 'REJECTED' ? 'Reservation rejected.' : `Reservation ${status.toLowerCase()}.`,
-      status === 'REJECTED' ? 'danger' : 'success'
-    );
-  }, [showToast]);
+  // const updateReservationStatus = useCallback((id, status) => {
+  //   setReservations(prev => prev.map(r => (r.id === id ? { ...r, status } : r)));
+  //   showToast(
+  //     status === 'CONFIRMED' ? 'Reservation confirmed.' : status === 'REJECTED' ? 'Reservation rejected.' : `Reservation ${status.toLowerCase()}.`,
+  //     status === 'REJECTED' ? 'danger' : 'success'
+  //   );
+  // }, [showToast]);
 
-  const updateInventoryItem = useCallback((id, changes) => {
-    setInventory(prev => prev.map(inv => (inv.id === id ? { ...inv, ...changes, lastUpdated: new Date().toISOString() } : inv)));
-    showToast('Inventory updated.', 'success');
-  }, [showToast]);
+  // const updateInventoryItem = useCallback((id, changes) => {
+  //   setInventory(prev => prev.map(inv => (inv.id === id ? { ...inv, ...changes, lastUpdated: new Date().toISOString() } : inv)));
+  //   showToast('Inventory updated.', 'success');
+  // }, [showToast]);
 
-  const deleteInventoryItem = useCallback((id) => {
-    setInventory(prev => prev.filter(inv => inv.id !== id));
-    showToast('Inventory item removed.', 'danger');
-  }, [showToast]);
+  // const deleteInventoryItem = useCallback((id) => {
+  //   setInventory(prev => prev.filter(inv => inv.id !== id));
+  //   showToast('Inventory item removed.', 'danger');
+  // }, [showToast]);
 
-  const addInventoryItem = useCallback((item) => {
-    setInventory(prev => [{ ...item, id: `inv_${Date.now()}`, lastUpdated: new Date().toISOString() }, ...prev]);
-    showToast('New stock added.', 'success');
-  }, [showToast]);
+  // const addInventoryItem = useCallback((item) => {
+  //   setInventory(prev => [{ ...item, id: `inv_${Date.now()}`, lastUpdated: new Date().toISOString() }, ...prev]);
+  //   showToast('New stock added.', 'success');
+  // }, [showToast]);
 
   const verifyPharmacy = useCallback((verificationId, approve) => {
     const record = verifications.find(v => v.id === verificationId);
@@ -125,11 +125,11 @@ export function AppProvider({ children }) {
     pharmacies,
     toast,
     showToast,
-    createReservation,
-    updateReservationStatus,
-    updateInventoryItem,
-    deleteInventoryItem,
-    addInventoryItem,
+    // createReservation,
+    // updateReservationStatus,
+    // updateInventoryItem,
+    // deleteInventoryItem,
+    // addInventoryItem,
     verifyPharmacy
   };
 

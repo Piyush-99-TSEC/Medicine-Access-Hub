@@ -54,7 +54,7 @@ export default function MyReservations() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {reservations.map(r => (
-          <ReservationCard key={r.id} reservation={r} onCancel={handleCancel} />
+          <ReservationCard key={r.id} reservation={r} onCancel={handleCancel} onChanged={load} />
         ))}
       </div>
     </div>

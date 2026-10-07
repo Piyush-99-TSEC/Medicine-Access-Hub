@@ -89,3 +89,11 @@ export const ownerReservationApi = {
   reject: (id, token) => api(`/api/v1/pharmacies/me/reservations/${id}/reject`, { method: 'PATCH', token }),
   collect: (id, token) => api(`/api/v1/pharmacies/me/reservations/${id}/collect`, { method: 'PATCH', token })
 };
+
+export const reviewApi = {
+  create: (reservationId, body, token) =>
+    api(`/api/v1/reservations/${reservationId}/review`, { method: 'POST', body, token }),
+  list: pharmacyId => api(`/api/v1/pharmacies/${pharmacyId}/reviews`),
+  update: (reservationId, body, token) =>
+    api(`/api/v1/reservations/${reservationId}/review`, { method: 'PUT', body, token })
+};

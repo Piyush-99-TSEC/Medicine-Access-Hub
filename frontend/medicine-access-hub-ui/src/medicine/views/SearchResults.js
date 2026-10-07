@@ -300,6 +300,7 @@ import StripOcrModal from '../components/StripOcrModal.js';
 import MedicineDetailModal from '../components/MedicineDetailModal.js';
 import PharmacyMap from '../../map/components/PharmacyMap.js';
 import Badge, { stockBadgeLabel, stockBadgeVariant } from '../../components/Badge.js';
+import PharmacyReviews from '../../reviews/components/PharmacyReviews.js';
 // import { useApp } from '../../context/AppContext.js';
 import { useGeolocation } from '../../hooks/useGeolocation.js';
 // import {
@@ -422,6 +423,7 @@ export default function SearchResults() {
         lat: row.latitude,
         lng: row.longitude,
         rating: Number(row.avgRating),
+        reviewCount: row.reviewCount,
         openTime: row.openTime,
         closeTime: row.closeTime
       };
@@ -589,7 +591,7 @@ export default function SearchResults() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mt-3 text-xs text-ink-soft">
-                          <span className="flex items-center gap-1.5"><Star size={13} className="text-warning fill-warning" /> {r.pharmacy.rating} rating</span>
+                          <PharmacyReviews pharmacyId={r.pharmacy.id} rating={r.pharmacy.rating} count={r.pharmacy.reviewCount} />
                           <span className="flex items-center gap-1.5"><MapPinned size={13} /> {r.roadDistanceKm} km road distance</span>
                           <span className="flex items-center gap-1.5"><PackageCheck size={13} /> {r.quantity} units · ₹{r.price}/unit</span>
                           <span className="flex items-center gap-1.5"><Clock size={13} /> {r.isOpenNow ? 'Open now' : `${r.pharmacy.openTime}–${r.pharmacy.closeTime}`}</span>

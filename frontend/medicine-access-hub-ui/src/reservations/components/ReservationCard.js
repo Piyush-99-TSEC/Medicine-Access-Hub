@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, MapPin, Navigation } from 'lucide-react';
+import { Clock, MapPin, Navigation, Star } from 'lucide-react';
 import Badge from '../../components/Badge.js';
+import ReviewModal from './ReviewModal.js';
 
 const STATUS_VARIANT = {
   PENDING: 'warning',
@@ -26,7 +27,8 @@ function useCountdown(target, active) {
   return secondsLeft;
 }
 
-export default function ReservationCard({ reservation, onCancel }) {
+export default function ReservationCard({ reservation, onCancel, onChanged }) {
+  const [rating, setRating] = useState(false);
   const { status } = reservation;
   const isActive = status === 'PENDING' || status === 'CONFIRMED';
   // PENDING: time left for the pharmacy to respond. CONFIRMED: time left to collect.
@@ -79,6 +81,33 @@ export default function ReservationCard({ reservation, onCancel }) {
             Cancel
           </button>
         </div>
+      )}
+
+      {status === 'COLLECTED' && !reservation.reviewed && (
+        <button
+          onClick={() => setRating(true)}
+          className="w-full h-9 mt-3 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary-hover transition-colors"
+        >
+          Rate this pharmacy
+        </button>
+      )}
+
+      {status === 'COLLECTED' && reservation.reviewed && (
+        <div className="mt-3 rounded-lg bg-app p-2.5">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-ink">Your review · {'★'.repeat(reservation.myRating)}</p>
+            <button onClick={() => setRating(true)} className="text-xs text-primary font-medium">Edit</button>
+          </div>
+          {reservation.myComment && <p className="text-xs text-ink-soft mt-0.5">{reservation.myComment}</p>}
+        </div>
+      )}
+
+      {rating && (
+        <ReviewModal
+          reservation={reservation}
+          onClose={() => setRating(false)}
+          onDone={() => { setRating(false); onChanged(); }}
+        />
       )}
     </div>
   );
