@@ -15,6 +15,7 @@ import com.medicineaccesshub.repository.MedicineRepository;
 import com.medicineaccesshub.repository.PharmacyRepository;
 import com.medicineaccesshub.repository.ReservationRepository;
 import com.medicineaccesshub.repository.UserRepository;
+import com.medicineaccesshub.service.EmailService;
 import com.medicineaccesshub.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final UserRepository userRepository;
     private final PythonService pythonService;
     private final ReviewRepository reviewRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -82,6 +84,14 @@ public class ReservationServiceImpl implements ReservationService {
                 .quantity(request.getQuantity())
                 .expiresAt(LocalDateTime.now().plusMinutes(RESPONSE_WINDOW_MINUTES))
                 .build());
+
+        // Owner and user are lazy proxies: read everything here, inside the transaction,
+        // and hand plain strings to the async email thread
+        if (pharmacy.getOwner() != null) {
+            emailService.sendReservationRequestEmail(
+                    pharmacy.getOwner().getName(), pharmacy.getOwner().getEmail(), pharmacy.getName(),
+                    saved.getUser().getName(), medicine.getBrandName(), saved.getQuantity(), saved.getExpiresAt());
+        }
         return ReservationResponse.forCustomer(saved);
     }
 

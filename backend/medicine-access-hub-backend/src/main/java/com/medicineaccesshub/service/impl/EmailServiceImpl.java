@@ -12,6 +12,9 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -134,6 +137,34 @@ public class EmailServiceImpl implements EmailService {
         return htmlHeader() + body + htmlFooter();
     }
 
+    private String buildReservationRequestHtml(String ownerName, String pharmacyName, String customerName,
+                                               String medicineName, int quantity, LocalDateTime respondBy) {
+        String body = """
+                <h2 style="margin:0 0 16px;font-size:24px;color:#0f172a;font-weight:700;">
+                    New reservation request &#128722;
+                </h2>
+                <p style="margin:0 0 12px;font-size:15px;color:#475569;">
+                    Hi <strong>%s</strong>,
+                </p>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.7;color:#475569;">
+                    A customer has reserved a medicine at <strong>%s</strong>.
+                </p>
+                <div style="padding:16px 20px;background:#f0fdf4;border-radius:10px;margin:20px 0;
+                            font-size:15px;line-height:1.8;color:#0f172a;">
+                    <strong>Medicine:</strong> %s<br>
+                    <strong>Quantity:</strong> %d<br>
+                    <strong>Customer:</strong> %s
+                </div>
+                <p style="margin:0;font-size:14px;color:#64748b;">
+                    Please accept or reject it from your dashboard by <strong>%s</strong>,
+                    otherwise the request expires automatically.
+                </p>
+                """.formatted(escapeHtml(ownerName), escapeHtml(pharmacyName), escapeHtml(medicineName),
+                quantity, escapeHtml(customerName), respondBy.format(DateTimeFormatter.ofPattern("hh:mm a")));
+
+        return htmlHeader() + body + htmlFooter();
+    }
+
     private String escapeHtml(String input) {
         if (input == null) return "";
         return input
@@ -190,6 +221,19 @@ public class EmailServiceImpl implements EmailService {
             doSend(user.getEmail(), "Welcome to Medicine Access Hub!", html, "WELCOME");
         } catch (Exception e) {
             log.error("[EMAIL] Failed to send welcome email to {}: {}", user.getEmail(), e.getMessage());
+        }
+    }
+
+    @Override
+    @Async("taskExecutor")
+    public void sendReservationRequestEmail(String ownerName, String ownerEmail, String pharmacyName, String customerName,
+                                            String medicineName, int quantity, LocalDateTime respondBy) {
+        try {
+            log.info("[EMAIL] Preparing RESERVATION_REQUEST email for pharmacy={} to={}", pharmacyName, ownerEmail);
+            String html = buildReservationRequestHtml(ownerName, pharmacyName, customerName, medicineName, quantity, respondBy);
+            doSend(ownerEmail, "New reservation request - Medicine Access Hub", html, "RESERVATION_REQUEST");
+        } catch (Exception e) {
+            log.error("[EMAIL] Failed to send reservation email to {}: {}", ownerEmail, e.getMessage());
         }
     }
 }

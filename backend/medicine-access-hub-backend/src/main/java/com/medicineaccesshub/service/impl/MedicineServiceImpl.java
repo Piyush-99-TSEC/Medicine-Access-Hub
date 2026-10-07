@@ -36,6 +36,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class MedicineServiceImpl implements MedicineService {
 
     private static final int MAX_PAGE_SIZE = 50;
+    // Same cap as the Python matcher (TOP_K), so results look alike when Python is down
+    private static final int SEARCH_LIMIT = 5;
     private static final long MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
     private final MedicineRepository medicineRepository;
@@ -58,6 +60,11 @@ public class MedicineServiceImpl implements MedicineService {
                 if (ids.isPresent()) {
                     return fromIds(ids.get(), safeSize);
                 }
+                // Python down or no match: SQL fallback, capped at the same top 5
+                List<MedicineResponse> top = medicineRepository
+                        .search(query.trim(), PageRequest.of(0, Math.min(safeSize, SEARCH_LIMIT)))
+                        .map(MedicineResponse::fromEntity).getContent();
+                return PageResponse.from(new PageImpl<>(top, PageRequest.of(0, safeSize), top.size()));
             }
             // Native query has its own ORDER BY, so the Pageable stays unsorted
             result = medicineRepository.search(query.trim(), PageRequest.of(safePage, safeSize));
