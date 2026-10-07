@@ -48,6 +48,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
         String getOpenTime();
         String getCloseTime();
         BigDecimal getAvgRating();
+        Integer getReviewCount();
         Integer getQuantity();
         BigDecimal getPrice();
         String getExpiryDate();
@@ -65,6 +66,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
                        to_char(p.open_time, 'HH24:MI')       AS "openTime",
                        to_char(p.close_time, 'HH24:MI')      AS "closeTime",
                        p.avg_rating                          AS "avgRating",
+                       p.review_count                        AS "reviewCount",
                        i.quantity                            AS "quantity",
                        i.price                               AS "price",
                        to_char(i.expiry_date, 'YYYY-MM-DD')  AS "expiryDate",

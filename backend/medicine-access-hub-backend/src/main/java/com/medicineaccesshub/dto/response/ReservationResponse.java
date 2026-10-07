@@ -28,7 +28,11 @@ public class ReservationResponse {
     private Integer quantity;
     private LocalDateTime expiresAt;
     private LocalDateTime pickupBy;
+    /** Customer view: true once this reservation has been reviewed. */
+    private Boolean reviewed;
     private LocalDateTime createdAt;
+    private Integer myRating;
+    private String myComment;
 
     private Long medicineId;
     private String medicineName;

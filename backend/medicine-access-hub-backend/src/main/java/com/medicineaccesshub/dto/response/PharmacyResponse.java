@@ -26,6 +26,7 @@ public class PharmacyResponse {
     private LocalTime openTime;
     private LocalTime closeTime;
     private BigDecimal avgRating;
+    private Integer reviewCount;
     private Boolean isVerified;
     private LocalDateTime createdAt;
 
@@ -50,6 +51,7 @@ public class PharmacyResponse {
                 .openTime(pharmacy.getOpenTime())
                 .closeTime(pharmacy.getCloseTime())
                 .avgRating(pharmacy.getAvgRating())
+                .reviewCount(pharmacy.getReviewCount())
                 .isVerified(pharmacy.getIsVerified())
                 .createdAt(pharmacy.getCreatedAt())
                 .status(pharmacy.getStatus())

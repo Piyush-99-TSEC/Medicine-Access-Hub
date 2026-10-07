@@ -54,6 +54,10 @@ public class Pharmacy {
     @Builder.Default
     private BigDecimal avgRating = BigDecimal.ZERO;
 
+    @Column(name = "review_count", nullable = false)
+    @Builder.Default
+    private Integer reviewCount = 0;
+
     @Column(name = "is_verified", nullable = false)
     @Builder.Default
     private Boolean isVerified = false;

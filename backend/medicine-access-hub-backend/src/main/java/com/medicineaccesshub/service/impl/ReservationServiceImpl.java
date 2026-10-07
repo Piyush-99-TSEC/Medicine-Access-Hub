@@ -5,6 +5,7 @@ import com.medicineaccesshub.dto.response.ReservationResponse;
 import com.medicineaccesshub.entity.Medicine;
 import com.medicineaccesshub.entity.Pharmacy;
 import com.medicineaccesshub.entity.Reservation;
+import com.medicineaccesshub.entity.Review;
 import com.medicineaccesshub.enums.PharmacyStatus;
 import com.medicineaccesshub.enums.ReservationStatus;
 import com.medicineaccesshub.exception.BadRequestException;
@@ -21,8 +22,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.medicineaccesshub.dto.response.RouteResponse;
 import com.medicineaccesshub.service.PythonService;
+import com.medicineaccesshub.repository.ReviewRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +46,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final MedicineRepository medicineRepository;
     private final UserRepository userRepository;
     private final PythonService pythonService;
+    private final ReviewRepository reviewRepository;
 
     @Override
     @Transactional
@@ -77,8 +84,19 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional(readOnly = true)
     public List<ReservationResponse> listMine(Long userId) {
+        Map<Long, Review> reviews = reviewRepository.findByUserWithReservation(userId).stream()
+                .collect(Collectors.toMap(rv -> rv.getReservation().getId(), rv -> rv));
         return reservationRepository.findByUserWithDetails(userId).stream()
-                .map(ReservationResponse::forCustomer).toList();
+                .map(r -> {
+                    ReservationResponse res = ReservationResponse.forCustomer(r);
+                    Review rv = reviews.get(r.getId());
+                    res.setReviewed(rv != null);
+                    if (rv != null) {
+                        res.setMyRating(rv.getRating());
+                        res.setMyComment(rv.getComment());
+                    }
+                    return res;
+                }).toList();
     }
 
     @Override

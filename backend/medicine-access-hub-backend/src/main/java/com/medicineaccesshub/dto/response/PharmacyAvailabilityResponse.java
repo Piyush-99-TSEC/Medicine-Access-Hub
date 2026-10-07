@@ -23,6 +23,7 @@ public class PharmacyAvailabilityResponse {
     private String openTime;
     private String closeTime;
     private BigDecimal avgRating;
+    private Integer reviewCount;
     private Integer quantity;
     private BigDecimal price;
     private String expiryDate;
@@ -41,6 +42,7 @@ public class PharmacyAvailabilityResponse {
                 .openTime(r.getOpenTime())
                 .closeTime(r.getCloseTime())
                 .avgRating(r.getAvgRating())
+                .reviewCount(r.getReviewCount())
                 .quantity(r.getQuantity())
                 .price(r.getPrice())
                 .expiryDate(r.getExpiryDate())
