@@ -2,11 +2,9 @@ package com.medicineaccesshub.service;
 
 import com.medicineaccesshub.dto.request.InventoryAddRequest;
 import com.medicineaccesshub.dto.request.InventoryUpdateRequest;
+import com.medicineaccesshub.dto.response.*;
+import com.medicineaccesshub.dto.request.BulkInventoryRequest;
 import com.medicineaccesshub.dto.response.InventoryItemResponse;
-import com.medicineaccesshub.dto.response.InventorySummaryResponse;
-import com.medicineaccesshub.dto.response.PageResponse;
-import com.medicineaccesshub.dto.response.PharmacyAvailabilityResponse;
-
 import java.util.List;
 
 public interface InventoryService {
@@ -24,4 +22,7 @@ public interface InventoryService {
     InventoryItemResponse updateMyStock(Long ownerUserId, Long inventoryId, InventoryUpdateRequest request);
 
     void deleteMyStock(Long ownerUserId, Long inventoryId);
+
+    /** Bulk stock upload. dryRun = preview only, nothing is saved. Quantity is the shelf count. */
+    BulkInventoryResponse bulkUpdate(Long ownerUserId, BulkInventoryRequest request, boolean dryRun);
 }

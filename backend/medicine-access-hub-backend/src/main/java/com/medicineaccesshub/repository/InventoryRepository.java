@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Modifying;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.math.BigDecimal;
@@ -52,6 +53,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
         Integer getQuantity();
         BigDecimal getPrice();
         String getExpiryDate();
+        Long getUpdatedMinutesAgo();
         Double getDistanceKm();
     }
 
@@ -70,6 +72,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
                        i.quantity                            AS "quantity",
                        i.price                               AS "price",
                        to_char(i.expiry_date, 'YYYY-MM-DD')  AS "expiryDate",
+                       GREATEST(0, floor(extract(epoch FROM (now() - i.updated_at)) / 60))::bigint AS "updatedMinutesAgo",
                        6371 * 2 * asin(sqrt(
                            power(sin(radians(p.latitude - :lat) / 2), 2)
                          + cos(radians(:lat)) * cos(radians(p.latitude))
@@ -140,4 +143,10 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
     @Query("SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i")
     long totalUnits();
+
+    /** Bulk upload: the pharmacy's existing stock rows for these medicines, medicine fetched in the same query. */
+    @Query("SELECT i FROM Inventory i JOIN FETCH i.medicine " +
+            "WHERE i.pharmacy.id = :pharmacyId AND i.medicine.id IN :medicineIds")
+    List<Inventory> findByPharmacyAndMedicines(@Param("pharmacyId") Long pharmacyId,
+                                               @Param("medicineIds") Collection<Long> medicineIds);
 }

@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
+
 @Repository
 public interface MedicineRepository extends JpaRepository<Medicine, Long> {
 
@@ -41,4 +44,7 @@ public interface MedicineRepository extends JpaRepository<Medicine, Long> {
     /** Admin master-data list: plain contains-match, paged (no similarity ranking needed). */
     Page<Medicine> findByBrandNameContainingIgnoreCaseOrSaltCompositionContainingIgnoreCase(
             String brand, String salt, Pageable pageable);
+    /** Bulk upload: all catalogue candidates for the uploaded brands in one query (brands passed lower-cased). */
+    @Query("SELECT m FROM Medicine m WHERE LOWER(m.brandName) IN :brands")
+    List<Medicine> findByBrandNames(@Param("brands") Collection<String> brands);
 }

@@ -27,6 +27,7 @@ public class PharmacyAvailabilityResponse {
     private Integer quantity;
     private BigDecimal price;
     private String expiryDate;
+    private Long updatedMinutesAgo;
     private Double distanceKm;
     private Double score;
     private Boolean isOpen;
@@ -46,6 +47,7 @@ public class PharmacyAvailabilityResponse {
                 .quantity(r.getQuantity())
                 .price(r.getPrice())
                 .expiryDate(r.getExpiryDate())
+                .updatedMinutesAgo(r.getUpdatedMinutesAgo())
                 .distanceKm(Math.round(r.getDistanceKm() * 100.0) / 100.0)
                 .build();
     }

@@ -13,7 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+import com.medicineaccesshub.dto.request.BulkInventoryRequest;
+import com.medicineaccesshub.dto.response.BulkInventoryResponse;
 import java.util.List;
 
 /**
@@ -67,6 +68,17 @@ public class OwnerInventoryController {
             @Valid @RequestBody InventoryAddRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Stock saved successfully",
                 inventoryService.saveMyStock(user.getId(), request)));
+    }
+
+    /** dryRun=true previews the result without saving anything. */
+    @PostMapping("/bulk")
+    public ResponseEntity<ApiResponse<BulkInventoryResponse>> bulk(
+            @AuthenticationPrincipal User user,
+            @RequestParam(defaultValue = "true") boolean dryRun,
+            @Valid @RequestBody BulkInventoryRequest request) {
+        String message = dryRun ? "Preview ready" : "Stock updated";
+        return ResponseEntity.ok(ApiResponse.success(message,
+                inventoryService.bulkUpdate(user.getId(), request, dryRun)));
     }
 
     @PutMapping("/{id}")

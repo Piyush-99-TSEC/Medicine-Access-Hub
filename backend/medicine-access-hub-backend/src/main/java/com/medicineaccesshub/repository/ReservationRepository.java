@@ -56,4 +56,15 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<DayCount> countPerDay(@Param("pharmacyId") Long pharmacyId, @Param("since") LocalDateTime since);
 
     long countByStatusIn(Collection<ReservationStatus> statuses);
+
+    interface HeldUnits {
+        Long getMedicineId();
+        Long getHeld();
+    }
+
+    /** Units already promised to confirmed reservations, per medicine (stock rows exclude them, shelf counts include them). */
+    @Query("SELECT r.medicine.id AS medicineId, SUM(r.quantity) AS held FROM Reservation r " +
+            "WHERE r.pharmacy.id = :pharmacyId AND r.status = com.medicineaccesshub.enums.ReservationStatus.CONFIRMED " +
+            "GROUP BY r.medicine.id")
+    List<HeldUnits> findHeldUnits(@Param("pharmacyId") Long pharmacyId);
 }

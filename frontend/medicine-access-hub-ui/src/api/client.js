@@ -121,3 +121,8 @@ export const adminMedicineRequestApi = {
   reject: (id, reason, token) =>
     api(`/api/v1/admin/medicine-requests/${id}/reject`, { method: 'PATCH', body: { reason }, token })
 };
+
+export const bulkInventoryApi = {
+  upload: (rows, dryRun, token) =>
+    api(`/api/v1/pharmacies/me/inventory/bulk?dryRun=${dryRun}`, { method: 'POST', body: { rows }, token })
+};

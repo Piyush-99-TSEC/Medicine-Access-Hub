@@ -314,6 +314,14 @@ import { rankPharmaciesWSM, isPharmacyOpenNow } from '../../mock/mockData';
 import { medicineApi } from '../../api/client';
 import { toUiMedicine } from '../../utils/medicineMapper';
 
+function freshness(mins) {
+  if (mins == null) return null;
+  if (mins < 1) return 'Updated just now';
+  if (mins < 60) return `Updated ${mins} min ago`;
+  if (mins < 1440) return `Updated ${Math.floor(mins / 60)} h ago`;
+  return `Updated ${Math.floor(mins / 1440)} d ago`;
+}
+
 export default function SearchResults() {
   // const { inventory, pharmacies } = useApp();
   const { location } = useGeolocation();
@@ -329,6 +337,7 @@ export default function SearchResults() {
   const [matches, setMatches] = useState([]);
   const [totalMatches, setTotalMatches] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadedFor, setLoadedFor] = useState(null);
   const [error, setError] = useState('');
 
   async function runSearch(rawQuery) {
@@ -390,6 +399,7 @@ export default function SearchResults() {
   useEffect(() => {
     if (!activeMedicine) {
       setAvailability([]);
+      setLoadedFor(null);
       return undefined;
     }
     let cancelled = false;
@@ -407,12 +417,17 @@ export default function SearchResults() {
         }
       })
       .finally(() => {
-        if (!cancelled) setAvailabilityLoading(false);
+        if (!cancelled) {
+          setAvailabilityLoading(false);
+          setLoadedFor(activeMedicine.id);
+        }
       });
     return () => {
       cancelled = true;
     };
   }, [activeMedicine, radiusKm, location.lat, location.lng]);
+
+  const availabilityReady = !availabilityLoading && loadedFor === activeMedicine?.id;
 
   const rankedResults = useMemo(() => {
     const candidates = availability.map(row => {
@@ -436,6 +451,7 @@ export default function SearchResults() {
         rating: pharmacy.rating,
         // backend gives road distance (A*) when the Python service is up
         roadDistanceKm: row.distanceKm,
+        updatedMinutesAgo: row.updatedMinutesAgo,
         isOpenNow: row.isOpen ?? isPharmacyOpenNow(pharmacy),
         wsmScore: row.score != null ? +(row.score * 100).toFixed(1) : null
       };
@@ -533,9 +549,12 @@ export default function SearchResults() {
         </div>
       )}
 
+
       {activeMedicine && (
         <>
-          {rankedResults.length === 0 && substitutes.length > 0 && (
+          {!availabilityReady && <p className="text-sm text-ink-soft">Checking nearby pharmacies…</p>}
+
+          {availabilityReady && rankedResults.length === 0 && substitutes.length > 0 && (
             <div className="rounded-2xl border border-info/20 bg-info/5 p-4">
               <p className="text-sm font-medium text-ink">
                 {activeMedicine.brand} is out of stock nearby — same-salt substitutes are available
@@ -554,9 +573,9 @@ export default function SearchResults() {
             </div>
           )}
 
-          {rankedResults.length === 0 && substitutes.length === 0 && (
+         {availabilityReady && rankedResults.length === 0 && substitutes.length === 0 && (
             <div className="rounded-xl border border-warning/25 bg-warning/5 p-4 text-sm text-ink">
-              <span className="font-medium">{activeMedicine.brand}</span> isn't available at any pharmacy within {radiusKm}km, and no safe same-salt substitute was found nearby. This search has been logged to help pharmacies restock.
+              <span className="font-medium">{activeMedicine.brand}</span> isn't available at any pharmacy within {radiusKm}km.
               <button onClick={() => setDetailMedicine(activeMedicine)} className="ml-2 text-primary font-medium underline">
                 View details
               </button>
@@ -595,6 +614,11 @@ export default function SearchResults() {
                           <span className="flex items-center gap-1.5"><MapPinned size={13} /> {r.roadDistanceKm} km road distance</span>
                           <span className="flex items-center gap-1.5"><PackageCheck size={13} /> {r.quantity} units · ₹{r.price}/unit</span>
                           <span className="flex items-center gap-1.5"><Clock size={13} /> {r.isOpenNow ? 'Open now' : `${r.pharmacy.openTime}–${r.pharmacy.closeTime}`}</span>
+                          {r.updatedMinutesAgo != null && (
+                            <span className={`flex items-center gap-1.5 ${r.updatedMinutesAgo >= 1440 ? 'text-warning' : ''}`}>
+                              <Clock size={13} /> {freshness(r.updatedMinutesAgo)}{r.updatedMinutesAgo >= 1440 && ' · may be outdated'}
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center justify-between mt-3.5 pt-3 border-t border-border">

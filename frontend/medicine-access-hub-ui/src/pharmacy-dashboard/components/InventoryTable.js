@@ -141,6 +141,7 @@ import { useApp } from '../../context/AppContext.js';
 import { ownerInventoryApi } from '../../api/client';
 import Badge, { stockBadgeLabel, stockBadgeVariant } from '../../components/Badge.js';
 import AddStockModal from './AddStockModal.js';
+import BulkUploadModal from './BulkUploadModal.js';
 
 const PAGE_SIZE = 20;
 
@@ -152,7 +153,7 @@ export default function InventoryTable({ searchTerm = '', statusFilter = 'ALL', 
   const { currentUser, showToast } = useApp();
   const token = currentUser?.token;
   const [modalOpen, setModalOpen] = useState(false);
-
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [data, setData] = useState({ content: [], totalElements: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
@@ -243,12 +244,13 @@ export default function InventoryTable({ searchTerm = '', statusFilter = 'ALL', 
           {data.totalElements} {data.totalElements === 1 ? 'medicine' : 'medicines'} match
         </p>
         <div className="flex gap-2">
-          <button disabled title="Coming in the next step" className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-border text-sm font-medium text-ink opacity-40 cursor-not-allowed">
-            <UploadCloud size={15} /> Bulk CSV Upload
+          <button onClick={() => setBulkOpen(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-border text-sm font-medium text-ink hover:border-primary/40 transition-colors">
+            <UploadCloud size={15} /> Upload Stock
           </button>
           <button onClick={() => setModalOpen(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-hover transition-colors">
             <Plus size={15} /> Add Stock
           </button>
+          <BulkUploadModal open={bulkOpen} onClose={() => setBulkOpen(false)} onSaved={() => { reload(); onChanged(); }} />
         </div>
       </div>
 

@@ -25,7 +25,19 @@ import com.medicineaccesshub.service.PythonService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import com.medicineaccesshub.dto.request.BulkInventoryRequest;
+import com.medicineaccesshub.dto.request.BulkInventoryRowRequest;
+import com.medicineaccesshub.dto.response.BulkInventoryResponse;
+import com.medicineaccesshub.dto.response.BulkInventoryRowResult;
+import com.medicineaccesshub.enums.BulkRowStatus;
+import com.medicineaccesshub.repository.ReservationRepository;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -41,6 +53,7 @@ public class InventoryServiceImpl implements InventoryService {
     private final MedicineRepository medicineRepository;
     private final PharmacyRepository pharmacyRepository;
     private final PythonService pythonService;
+    private final ReservationRepository reservationRepository;
 
 
     @Override
@@ -212,5 +225,148 @@ public class InventoryServiceImpl implements InventoryService {
         if (price.compareTo(medicine.getMrp()) > 0) {
             throw new BadRequestException("Price cannot exceed MRP (₹" + medicine.getMrp() + ")");
         }
+    }
+
+    @Override
+    @Transactional
+    public BulkInventoryResponse bulkUpdate(Long ownerUserId, BulkInventoryRequest request, boolean dryRun) {
+        Pharmacy pharmacy = requireVerifiedPharmacy(ownerUserId);
+        List<BulkInventoryRowRequest> rows = request.getRows();
+
+        // One query for the whole catalogue lookup
+        Set<String> brands = rows.stream()
+                .map(BulkInventoryRowRequest::getBrandName)
+                .filter(b -> b != null && !b.isBlank())
+                .map(b -> b.trim().toLowerCase())
+                .collect(Collectors.toSet());
+        Map<String, List<Medicine>> catalogue = brands.isEmpty() ? Map.of()
+                : medicineRepository.findByBrandNames(brands).stream()
+                .collect(Collectors.groupingBy(m -> m.getBrandName().toLowerCase()));
+
+        // Pass 1: validate every row and match it to a medicine
+        Map<Long, Integer> seen = new HashMap<>();
+        List<BulkInventoryRowResult> results = new ArrayList<>();
+        for (int i = 0; i < rows.size(); i++) {
+            results.add(evaluateRow(i + 1, rows.get(i), catalogue, seen));
+        }
+
+        // Pass 2: two more queries for all matched rows (existing stock, units held for reservations)
+        Set<Long> ids = results.stream().map(BulkInventoryRowResult::getMedicineId)
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<Long, Inventory> existing = ids.isEmpty() ? Map.of()
+                : inventoryRepository.findByPharmacyAndMedicines(pharmacy.getId(), ids).stream()
+                .collect(Collectors.toMap(i -> i.getMedicine().getId(), i -> i));
+        Map<Long, Long> held = reservationRepository.findHeldUnits(pharmacy.getId()).stream()
+                .collect(Collectors.toMap(ReservationRepository.HeldUnits::getMedicineId,
+                        ReservationRepository.HeldUnits::getHeld));
+
+        List<Inventory> toSave = new ArrayList<>();
+        for (int i = 0; i < rows.size(); i++) {
+            BulkInventoryRowResult result = results.get(i);
+            Long medicineId = result.getMedicineId();
+            if (medicineId == null) {
+                continue;
+            }
+            BulkInventoryRowRequest row = rows.get(i);
+            long heldUnits = held.getOrDefault(medicineId, 0L);
+            int available = (int) Math.max(0, row.getQuantity() - heldUnits);
+            Inventory item = existing.get(medicineId);
+
+            result.setStatus(item == null ? BulkRowStatus.CREATE : BulkRowStatus.UPDATE);
+            if (heldUnits > 0) {
+                result.setMessage(heldUnits + " unit(s) held for reservations are kept aside");
+            }
+            if (!dryRun) {
+                if (item == null) {
+                    item = Inventory.builder().pharmacy(pharmacy)
+                            .medicine(medicineRepository.getReferenceById(medicineId)).build();
+                }
+                item.setQuantity(available);
+                item.setPrice(row.getPrice());
+                LocalDate expiry = parseDate(row.getExpiryDate());
+                if (expiry != null) {
+                    item.setExpiryDate(expiry); // blank expiry in the file keeps the existing one
+                }
+                toSave.add(item);
+            }
+        }
+        inventoryRepository.saveAll(toSave);
+
+        return BulkInventoryResponse.builder()
+                .dryRun(dryRun)
+                .total(results.size())
+                .created(count(results, BulkRowStatus.CREATE))
+                .updated(count(results, BulkRowStatus.UPDATE))
+                .notInCatalogue(count(results, BulkRowStatus.NOT_IN_CATALOGUE))
+                .invalid(count(results, BulkRowStatus.INVALID))
+                .rows(results)
+                .build();
+    }
+
+    /** Validates one row and matches it by brand (+ strength). Valid rows come back as UPDATE with a medicineId. */
+    private BulkInventoryRowResult evaluateRow(int number, BulkInventoryRowRequest row,
+                                               Map<String, List<Medicine>> catalogue, Map<Long, Integer> seen) {
+        BulkInventoryRowResult.BulkInventoryRowResultBuilder out = BulkInventoryRowResult.builder()
+                .rowNumber(number).brandName(row.getBrandName())
+                .strength(row.getStrength()).quantity(row.getQuantity());
+
+        if (row.getBrandName() == null || row.getBrandName().isBlank()) {
+            return invalid(out, "Brand name is missing");
+        }
+        if (row.getQuantity() == null || row.getQuantity() < 0) {
+            return invalid(out, "Quantity must be 0 or more");
+        }
+        if (row.getPrice() == null || row.getPrice().signum() <= 0) {
+            return invalid(out, "Price must be greater than 0");
+        }
+        try {
+            parseDate(row.getExpiryDate());
+        } catch (DateTimeParseException e) {
+            return invalid(out, "Expiry date must be yyyy-MM-dd");
+        }
+
+        List<Medicine> candidates = catalogue.getOrDefault(row.getBrandName().trim().toLowerCase(), List.of());
+        if (candidates.isEmpty()) {
+            return out.status(BulkRowStatus.NOT_IN_CATALOGUE).message("Not in the catalogue").build();
+        }
+        Medicine medicine;
+        if (candidates.size() == 1) {
+            // Catalogue brand names already contain the strength, so a single match is decisive
+            medicine = candidates.get(0);
+        } else {
+            if (row.getStrength() == null || row.getStrength().isBlank()) {
+                return invalid(out, "Several strengths exist; add the strength");
+            }
+            String wanted = normalize(row.getStrength());
+            medicine = candidates.stream()
+                    .filter(m -> normalize(m.getStrength()).equals(wanted)).findFirst().orElse(null);
+            if (medicine == null) {
+                return out.status(BulkRowStatus.NOT_IN_CATALOGUE).message("Brand exists but not in this strength").build();
+            }
+        }
+        if (row.getPrice().compareTo(medicine.getMrp()) > 0) {
+            return invalid(out, "Price exceeds MRP (₹" + medicine.getMrp() + ")");
+        }
+        Integer firstRow = seen.putIfAbsent(medicine.getId(), number);
+        if (firstRow != null) {
+            return invalid(out, "Duplicate of row " + firstRow);
+        }
+        return out.status(BulkRowStatus.UPDATE).medicineId(medicine.getId()).build();
+    }
+
+    private BulkInventoryRowResult invalid(BulkInventoryRowResult.BulkInventoryRowResultBuilder out, String message) {
+        return out.status(BulkRowStatus.INVALID).message(message).build();
+    }
+
+    private int count(List<BulkInventoryRowResult> results, BulkRowStatus status) {
+        return (int) results.stream().filter(r -> r.getStatus() == status).count();
+    }
+
+    private LocalDate parseDate(String s) {
+        return s == null || s.isBlank() ? null : LocalDate.parse(s.trim());
+    }
+
+    private String normalize(String s) {
+        return s == null ? "" : s.replaceAll("\\s+", "").replace("/", "+").toLowerCase();
     }
 }
