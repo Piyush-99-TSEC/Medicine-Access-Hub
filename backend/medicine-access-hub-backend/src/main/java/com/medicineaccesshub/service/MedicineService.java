@@ -1,8 +1,6 @@
 package com.medicineaccesshub.service;
 
-import com.medicineaccesshub.dto.response.MedicineResponse;
-import com.medicineaccesshub.dto.response.PageResponse;
-import com.medicineaccesshub.dto.response.OcrScanResponse;
+import com.medicineaccesshub.dto.response.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.medicineaccesshub.dto.request.MedicineRequest;
 import com.medicineaccesshub.dto.response.MedicineResponse;
@@ -21,4 +19,6 @@ public interface MedicineService {
     MedicineResponse adminCreate(MedicineRequest request);
 
     MedicineResponse adminUpdate(Long id, MedicineRequest request);
+
+    PrescriptionScanResponse scanPrescription(MultipartFile file);
 }

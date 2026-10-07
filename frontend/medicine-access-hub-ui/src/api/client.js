@@ -63,6 +63,11 @@ export const medicineApi = {
     const form = new FormData();
     form.append('file', file);
     return api('/api/v1/medicines/scan', { method: 'POST', body: form, token });
+  },
+  prescription: (file, token) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api('/api/v1/medicines/prescription', { method: 'POST', body: form, token });
   }
 };
 
@@ -126,3 +131,4 @@ export const bulkInventoryApi = {
   upload: (rows, dryRun, token) =>
     api(`/api/v1/pharmacies/me/inventory/bulk?dryRun=${dryRun}`, { method: 'POST', body: { rows }, token })
 };
+

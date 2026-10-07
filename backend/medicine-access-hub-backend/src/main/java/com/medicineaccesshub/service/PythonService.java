@@ -24,4 +24,7 @@ public interface PythonService {
 
     /** Tells Python to reload its medicine search index (after the master data changed). */
     void reloadSearchIndex();
+
+    /** Prescription photo: one entry per medicine line, each with candidate medicines. */
+    Optional<Map<String, Object>> prescription(byte[] image, String filename);
 }

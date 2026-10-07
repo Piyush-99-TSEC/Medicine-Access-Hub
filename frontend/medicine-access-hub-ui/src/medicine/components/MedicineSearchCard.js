@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Search, ScanLine, MapPin } from 'lucide-react';
+import { Search, ScanLine, MapPin, FileText } from 'lucide-react';
 
 const RADIUS_OPTIONS = [1, 3, 5, 10];
 
-export default function MedicineSearchCard({ query, radiusKm, onRadiusChange, onSearch, onOpenScan }) {
+export default function MedicineSearchCard({ query, radiusKm, onRadiusChange, onSearch, onOpenScan, onOpenPrescription })  {
   const [value, setValue] = useState(query);
 
   function submit(e) {
@@ -32,6 +32,15 @@ export default function MedicineSearchCard({ query, radiusKm, onRadiusChange, on
           <ScanLine size={16} />
           Scan Medicine Strip / Box
         </button>
+
+        {/* <button
+          type="button"
+          onClick={onOpenPrescription}
+          className="h-11 px-4 rounded-xl border border-primary/25 bg-primary-tint text-primary font-medium text-sm flex items-center gap-2 hover:bg-primary/10 transition-colors shrink-0"
+        >
+          <FileText size={16} />
+          Prescription
+        </button> */}
 
         <button
           type="submit"

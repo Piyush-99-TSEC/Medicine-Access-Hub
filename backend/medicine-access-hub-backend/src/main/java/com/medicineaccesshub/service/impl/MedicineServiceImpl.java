@@ -2,6 +2,7 @@ package com.medicineaccesshub.service.impl;
 
 import com.medicineaccesshub.dto.response.MedicineResponse;
 import com.medicineaccesshub.dto.response.PageResponse;
+import com.medicineaccesshub.dto.response.PrescriptionScanResponse;
 import com.medicineaccesshub.entity.Medicine;
 import com.medicineaccesshub.exception.ResourceNotFoundException;
 import com.medicineaccesshub.repository.MedicineRepository;
@@ -124,6 +125,61 @@ public class MedicineServiceImpl implements MedicineService {
                 .toList();
 
         return OcrScanResponse.builder().lines(lines).candidates(candidates).build();
+    }
+
+    // No @Transactional: the Python call can take several seconds and must not hold a DB connection.
+    @Override
+    @SuppressWarnings("unchecked")
+    public PrescriptionScanResponse scanPrescription(MultipartFile file) {
+        validateImage(file);
+
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (IOException e) {
+            throw new BadRequestException("Could not read the uploaded image");
+        }
+        String filename = file.getOriginalFilename() == null ? "prescription.jpg" : file.getOriginalFilename();
+
+        Map<String, Object> res = pythonService.prescription(bytes, filename)
+                .orElseThrow(() -> new BadRequestException(
+                        "Prescription reading is unavailable right now, add medicines by name instead"));
+
+        List<Map<String, Object>> found = (List<Map<String, Object>>) res.getOrDefault("medicines", List.of());
+
+        List<Long> ids = found.stream()
+                .flatMap(m -> ((List<Map<String, Object>>) m.getOrDefault("candidates", List.of())).stream())
+                .map(c -> ((Number) c.get("id")).longValue())
+                .distinct().toList();
+        Map<Long, Medicine> byId = medicineRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(Medicine::getId, m -> m));
+
+        List<PrescriptionScanResponse.Item> items = found.stream().map(m -> {
+            List<OcrScanResponse.Candidate> candidates =
+                    ((List<Map<String, Object>>) m.getOrDefault("candidates", List.of())).stream()
+                            .map(c -> {
+                                Medicine med = byId.get(((Number) c.get("id")).longValue());
+                                if (med == null) {
+                                    return null;
+                                }
+                                return OcrScanResponse.Candidate.builder()
+                                        .medicine(MedicineResponse.fromEntity(med))
+                                        .confidence(((Number) c.get("score")).doubleValue())
+                                        .build();
+                            })
+                            .filter(Objects::nonNull)
+                            .toList();
+            return PrescriptionScanResponse.Item.builder()
+                    .query((String) m.get("query"))
+                    .matched(Boolean.TRUE.equals(m.get("matched")))
+                    .candidates(candidates)
+                    .build();
+        }).toList();
+
+        return PrescriptionScanResponse.builder()
+                .items(items)
+                .source((String) res.getOrDefault("source", "ocr"))
+                .build();
     }
 
     @Override

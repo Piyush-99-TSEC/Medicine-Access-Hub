@@ -1,9 +1,6 @@
 package com.medicineaccesshub.controller;
 
-import com.medicineaccesshub.dto.response.ApiResponse;
-import com.medicineaccesshub.dto.response.MedicineResponse;
-import com.medicineaccesshub.dto.response.PageResponse;
-import com.medicineaccesshub.dto.response.PharmacyAvailabilityResponse;
+import com.medicineaccesshub.dto.response.*;
 import com.medicineaccesshub.service.InventoryService;
 import com.medicineaccesshub.service.MedicineService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.medicineaccesshub.dto.response.OcrScanResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
@@ -63,4 +59,12 @@ public class MedicineController {
         return ResponseEntity.ok(ApiResponse.success("Strip scanned successfully",
                 medicineService.scanStrip(file)));
     }
+
+    // Prescription photo -> medicine lines, each with candidates for the patient to confirm.
+    @PostMapping(value = "/prescription", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<PrescriptionScanResponse>> prescription(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.success("Prescription read successfully",
+                medicineService.scanPrescription(file)));
+    }
+
 }

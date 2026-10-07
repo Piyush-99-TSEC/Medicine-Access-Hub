@@ -76,6 +76,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/pharmacies/{id}/reviews").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/medicines/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/medicines/scan").hasRole("PATIENT")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/medicines/prescription").hasRole("PATIENT")
                         .requestMatchers("/api/v1/auth/me").authenticated()
                         .anyRequest().authenticated()
                 )

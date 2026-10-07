@@ -294,7 +294,8 @@
 // }
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Clock, MapPinned, PackageCheck, Info } from 'lucide-react';
+import { Star, Clock, MapPinned, PackageCheck, Info, X } from 'lucide-react';
+import PrescriptionModal from '../components/PrescriptionModal.js';
 import MedicineSearchCard from '../components/MedicineSearchCard.js';
 import StripOcrModal from '../components/StripOcrModal.js';
 import MedicineDetailModal from '../components/MedicineDetailModal.js';
@@ -339,6 +340,9 @@ export default function SearchResults() {
   const [loading, setLoading] = useState(false);
   const [loadedFor, setLoadedFor] = useState(null);
   const [error, setError] = useState('');
+
+  const [rxOpen, setRxOpen] = useState(false);
+  const [cart, setCart] = useState([]);
 
   async function runSearch(rawQuery) {
     setQuery(rawQuery);
@@ -473,6 +477,14 @@ export default function SearchResults() {
     setActiveMedicine(medicine);
   }
 
+  function handleRxConfirm(medicines) {
+    setRxOpen(false);
+    setCart(medicines);
+    setMatches([]);
+    setActiveMedicine(null);
+    setError('');
+  }
+
   function handleSubstituteSearch(medicine) {
     setDetailMedicine(null);
     setQuery(medicine.brand);
@@ -502,7 +514,32 @@ export default function SearchResults() {
         onRadiusChange={setRadiusKm}
         onSearch={runSearch}
         onOpenScan={() => setOcrOpen(true)}
+        onOpenPrescription={() => setRxOpen(true)}
       />
+
+      {cart.length > 0 && (
+        <div className="rounded-xl border border-border bg-surface p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-ink-soft">Your prescription medicines. Select one to see nearby pharmacies:</p>
+            <button onClick={() => setCart([])} className="text-xs text-primary font-medium">Clear</button>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-3">
+            {cart.map(m => (
+              <span
+                key={m.id}
+                className={`inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg border text-xs font-medium text-ink ${
+                  activeMedicine?.id === m.id ? 'bg-primary-tint border-primary/50' : 'bg-app border-border'
+                }`}
+              >
+                <button onClick={() => setActiveMedicine(m)}>{m.brand} · {m.strength}</button>
+                <button onClick={() => setCart(prev => prev.filter(x => x.id !== m.id))} className="text-ink-soft hover:text-ink">
+                  <X size={12} />
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div className="rounded-xl border border-border bg-surface p-4 text-sm text-ink-soft">
@@ -664,6 +701,7 @@ export default function SearchResults() {
       )}
 
       <StripOcrModal open={ocrOpen} onClose={() => setOcrOpen(false)} onConfirm={handleOcrConfirm} />
+      <PrescriptionModal open={rxOpen} onClose={() => setRxOpen(false)} onConfirm={handleRxConfirm} />
       <MedicineDetailModal
         medicine={detailMedicine}
         open={!!detailMedicine}

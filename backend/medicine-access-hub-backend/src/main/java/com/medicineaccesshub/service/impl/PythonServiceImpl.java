@@ -103,6 +103,28 @@ public class PythonServiceImpl implements PythonService {
 
     @Override
     @SuppressWarnings("unchecked")
+    public Optional<Map<String, Object>> prescription(byte[] image, String filename) {
+        try {
+            MultiValueMap<String, Object> parts = new LinkedMultiValueMap<>();
+            parts.add("file", new ByteArrayResource(image) {
+                @Override
+                public String getFilename() {
+                    return filename;
+                }
+            });
+            Map<String, Object> res = ocrClient.post().uri("/prescription")
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(parts)
+                    .retrieve().body(Map.class);
+            return Optional.ofNullable(res);
+        } catch (Exception e) {
+            log.warn("Python /prescription failed: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
     public Optional<Map<String, Object>> route(double fromLat, double fromLng, double toLat, double toLng) {
         try {
             Map<String, Object> res = client.post().uri("/route")
