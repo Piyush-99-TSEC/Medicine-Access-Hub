@@ -98,3 +98,14 @@ export const reviewApi = {
   update: (reservationId, body, token) =>
     api(`/api/v1/reservations/${reservationId}/review`, { method: 'PUT', body, token })
 };
+
+export const adminMedicineApi = {
+  list: (q, page, token) =>
+    api(`/api/v1/admin/medicines?q=${encodeURIComponent(q)}&page=${page}&size=15`, { token }),
+  create: (body, token) => api('/api/v1/admin/medicines', { method: 'POST', body, token }),
+  update: (id, body, token) => api(`/api/v1/admin/medicines/${id}`, { method: 'PUT', body, token })
+};
+
+export const adminStatsApi = {
+  get: token => api('/api/v1/admin/stats', { token })
+};

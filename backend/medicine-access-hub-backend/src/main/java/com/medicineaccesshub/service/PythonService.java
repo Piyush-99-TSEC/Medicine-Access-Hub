@@ -21,4 +21,7 @@ public interface PythonService {
 
     /** Road route (A*) between two points: {distanceKm, path:[[lat,lng],...]}. */
     Optional<Map<String, Object>> route(double fromLat, double fromLng, double toLat, double toLng);
+
+    /** Tells Python to reload its medicine search index (after the master data changed). */
+    void reloadSearchIndex();
 }

@@ -54,4 +54,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             "WHERE pharmacy_id = :pharmacyId AND created_at >= :since " +
             "GROUP BY CAST(created_at AS date)", nativeQuery = true)
     List<DayCount> countPerDay(@Param("pharmacyId") Long pharmacyId, @Param("since") LocalDateTime since);
+
+    long countByStatusIn(Collection<ReservationStatus> statuses);
 }

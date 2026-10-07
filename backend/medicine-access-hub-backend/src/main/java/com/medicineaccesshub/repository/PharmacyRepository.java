@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.medicineaccesshub.enums.PharmacyStatus;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -35,4 +34,6 @@ public interface PharmacyRepository extends JpaRepository<Pharmacy, Long> {
     @Query("UPDATE Pharmacy p SET p.avgRating = ((p.avgRating * p.reviewCount) - :oldRating + :newRating) / p.reviewCount " +
             "WHERE p.id = :id AND p.reviewCount > 0")
     int adjustRating(@Param("id") Long id, @Param("oldRating") int oldRating, @Param("newRating") int newRating);
+
+    long countByStatus(PharmacyStatus status);
 }

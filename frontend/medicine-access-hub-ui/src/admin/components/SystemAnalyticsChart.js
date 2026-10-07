@@ -3,10 +3,11 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-export default function SystemAnalyticsChart({ pharmacies, pendingCount }) {
-  const verifiedCount = pharmacies.filter(p => p.isVerified).length;
-  const rejectedCount = Math.max(0, pharmacies.length - verifiedCount - pendingCount);
-
+export default function SystemAnalyticsChart({ verified, pending, unverified }) {
+  const verifiedCount = verified;
+  const pendingCount = pending;
+  const rejectedCount = unverified;
+  
   const chartData = {
     labels: ['Verified', 'Pending', 'Unverified'],
     datasets: [

@@ -37,4 +37,8 @@ public interface MedicineRepository extends JpaRepository<Medicine, Long> {
             """,
             nativeQuery = true)
     Page<Medicine> search(@Param("q") String q, Pageable pageable);
+
+    /** Admin master-data list: plain contains-match, paged (no similarity ranking needed). */
+    Page<Medicine> findByBrandNameContainingIgnoreCaseOrSaltCompositionContainingIgnoreCase(
+            String brand, String salt, Pageable pageable);
 }

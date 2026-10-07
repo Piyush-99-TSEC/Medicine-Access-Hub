@@ -116,4 +116,13 @@ public class PythonServiceImpl implements PythonService {
             return Optional.empty();
         }
     }
+
+    @Override
+    public void reloadSearchIndex() {
+        try {
+            client.post().uri("/reload").retrieve().toBodilessEntity();
+        } catch (Exception e) {
+            log.warn("Python /reload failed: {}", e.getMessage());
+        }
+    }
 }

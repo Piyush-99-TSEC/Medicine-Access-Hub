@@ -138,4 +138,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
     Optional<Inventory> findByIdAndPharmacyId(Long id, Long pharmacyId);
 
+    @Query("SELECT COALESCE(SUM(i.quantity), 0) FROM Inventory i")
+    long totalUnits();
 }

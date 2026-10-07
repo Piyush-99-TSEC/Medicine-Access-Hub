@@ -23,6 +23,12 @@ import com.medicineaccesshub.dto.response.OcrScanResponse;
 import com.medicineaccesshub.exception.BadRequestException;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import com.medicineaccesshub.dto.request.MedicineRequest;
+import com.medicineaccesshub.exception.ResourceNotFoundException;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -118,6 +124,61 @@ public class MedicineServiceImpl implements MedicineService {
                 .toList();
 
         return OcrScanResponse.builder().lines(lines).candidates(candidates).build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<MedicineResponse> adminList(String q, int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+        String term = q == null ? "" : q.trim();
+        Page<Medicine> result = medicineRepository
+                .findByBrandNameContainingIgnoreCaseOrSaltCompositionContainingIgnoreCase(
+                        term, term, PageRequest.of(safePage, safeSize, Sort.by("brandName")));
+        return PageResponse.from(result.map(MedicineResponse::fromEntity));
+    }
+
+    @Override
+    @Transactional
+    public MedicineResponse adminCreate(MedicineRequest request) {
+        Medicine saved = medicineRepository.save(apply(new Medicine(), request));
+        reloadSearchIndexAfterCommit();
+        return MedicineResponse.fromEntity(saved);
+    }
+
+    @Override
+    @Transactional
+    public MedicineResponse adminUpdate(Long id, MedicineRequest request) {
+        Medicine medicine = medicineRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Medicine", "id", id));
+        reloadSearchIndexAfterCommit();
+        return MedicineResponse.fromEntity(apply(medicine, request));
+    }
+
+    // Python reads the DB, so it must reload only after our transaction has committed
+    private void reloadSearchIndexAfterCommit() {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                pythonService.reloadSearchIndex();
+            }
+        });
+    }
+
+    private Medicine apply(Medicine m, MedicineRequest r) {
+        m.setBrandName(r.getBrandName().trim());
+        m.setSaltComposition(r.getSaltComposition().trim());
+        m.setStrength(blankToNull(r.getStrength()));
+        m.setDosageForm(blankToNull(r.getDosageForm()));
+        m.setManufacturer(blankToNull(r.getManufacturer()));
+        m.setPackSize(blankToNull(r.getPackSize()));
+        m.setMrp(r.getMrp());
+        m.setRxRequired(r.getRxRequired());
+        return m;
+    }
+
+    private String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s.trim();
     }
 
     private void validateImage(MultipartFile file) {

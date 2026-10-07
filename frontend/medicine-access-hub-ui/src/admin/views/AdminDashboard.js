@@ -7,13 +7,14 @@ import UnmetDemandClusterChart from '../components/UnmetDemandClusterChart.js';
 import { useApp } from '../../context/AppContext.js';
 import { MEDICINES, UNMET_DEMAND_CLUSTERS, ADMIN_ACTIVITY_LOG, ADMIN_REPORTS } from '../../mock/mockData';
 import Badge from '../../components/Badge.js';
-import { adminPharmacyApi } from '../../api/client.js';
+import MasterDataTab from '../components/MasterDataTab.js';
+import { adminPharmacyApi, adminStatsApi } from '../../api/client.js';
 
 const TABS = [
   { key: 'verification', label: 'Pharmacy Verification', icon: ShieldCheck },
   { key: 'medicines', label: 'Medicine Master Data', icon: Database },
   { key: 'metrics', label: 'System Metrics', icon: BarChart3 },
-  { key: 'audit-reports', label: 'Audit & Reports', icon: FileClock }
+  // { key: 'audit-reports', label: 'Audit & Reports', icon: FileClock }
 ];
 const VALID_TABS = TABS.map(t => t.key);
 
@@ -144,63 +145,70 @@ function VerificationTab() {
   );
 }
 
-function MasterDataTab() {
-  const [q, setQ] = useState('');
-  const rows = MEDICINES.filter(m => {
-    const term = q.toLowerCase();
-    return m.brand.toLowerCase().includes(term) || m.generic.toLowerCase().includes(term) || m.salt.toLowerCase().includes(term);
-  });
+// function MasterDataTab() {
+//   const [q, setQ] = useState('');
+//   const rows = MEDICINES.filter(m => {
+//     const term = q.toLowerCase();
+//     return m.brand.toLowerCase().includes(term) || m.generic.toLowerCase().includes(term) || m.salt.toLowerCase().includes(term);
+//   });
 
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="relative max-w-sm">
-        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
-        <input value={q} onChange={e => setQ(e.target.value)} placeholder="Filter master medicine data…" className="w-full h-9 pl-9 pr-3 rounded-lg border border-border bg-app text-sm outline-none focus:border-primary/50" />
-      </div>
+//   return (
+//     <div className="flex flex-col gap-3">
+//       <div className="relative max-w-sm">
+//         <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft" />
+//         <input value={q} onChange={e => setQ(e.target.value)} placeholder="Filter master medicine data…" className="w-full h-9 pl-9 pr-3 rounded-lg border border-border bg-app text-sm outline-none focus:border-primary/50" />
+//       </div>
 
-      <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-card overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-app text-ink-soft text-xs uppercase tracking-wide">
-              <th className="text-left font-medium px-4 py-3">Brand</th>
-              <th className="text-left font-medium px-4 py-3">Salt Composition</th>
-              <th className="text-left font-medium px-4 py-3">Strength</th>
-              <th className="text-left font-medium px-4 py-3">Form</th>
-              <th className="text-left font-medium px-4 py-3">Manufacturer</th>
-              <th className="text-left font-medium px-4 py-3">MRP</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(m => (
-              <tr key={m.id} className="border-t border-border">
-                <td className="px-4 py-3 font-medium text-ink">{m.brand}</td>
-                <td className="px-4 py-3 text-ink-soft">{m.salt}</td>
-                <td className="px-4 py-3 text-ink-soft">{m.strength}</td>
-                <td className="px-4 py-3 text-ink-soft">{m.form}</td>
-                <td className="px-4 py-3 text-ink-soft">{m.manufacturer}</td>
-                <td className="px-4 py-3 text-ink-soft">₹{m.mrp}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
+//       <div className="rounded-2xl border border-border bg-surface overflow-hidden shadow-card overflow-x-auto">
+//         <table className="w-full text-sm">
+//           <thead>
+//             <tr className="bg-app text-ink-soft text-xs uppercase tracking-wide">
+//               <th className="text-left font-medium px-4 py-3">Brand</th>
+//               <th className="text-left font-medium px-4 py-3">Salt Composition</th>
+//               <th className="text-left font-medium px-4 py-3">Strength</th>
+//               <th className="text-left font-medium px-4 py-3">Form</th>
+//               <th className="text-left font-medium px-4 py-3">Manufacturer</th>
+//               <th className="text-left font-medium px-4 py-3">MRP</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {rows.map(m => (
+//               <tr key={m.id} className="border-t border-border">
+//                 <td className="px-4 py-3 font-medium text-ink">{m.brand}</td>
+//                 <td className="px-4 py-3 text-ink-soft">{m.salt}</td>
+//                 <td className="px-4 py-3 text-ink-soft">{m.strength}</td>
+//                 <td className="px-4 py-3 text-ink-soft">{m.form}</td>
+//                 <td className="px-4 py-3 text-ink-soft">{m.manufacturer}</td>
+//                 <td className="px-4 py-3 text-ink-soft">₹{m.mrp}</td>
+//               </tr>
+//             ))}
+//           </tbody>
+//         </table>
+//       </div>
+//     </div>
+//   );
+// }
 
 function MetricsTab() {
-  const { pharmacies, reservations, inventory, verifications } = useApp();
-  const totalUnits = inventory.reduce((sum, i) => sum + i.quantity, 0);
-  const activeReservations = reservations.filter(r => r.status === 'PENDING' || r.status === 'CONFIRMED').length;
+  const { currentUser } = useApp();
+  const [stats, setStats] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    adminStatsApi.get(currentUser?.token).then(setStats).catch(err => setError(err.message));
+  }, [currentUser?.token]);
+
+  if (error) return <p className="text-sm text-danger">{error}</p>;
+  if (!stats) return <p className="text-sm text-ink-soft">Loading metrics...</p>;
 
   return (
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Registered Pharmacies', value: pharmacies.length },
-          { label: 'Medicines in Master Table', value: MEDICINES.length },
-          { label: 'Active Reservations', value: activeReservations },
-          { label: 'Total Units Stocked', value: totalUnits }
+          { label: 'Registered Pharmacies', value: stats.totalPharmacies },
+          { label: 'Medicines in Master Table', value: stats.medicines },
+          { label: 'Active Reservations', value: stats.activeReservations },
+          { label: 'Total Units Stocked', value: stats.totalUnitsStocked }
         ].map(s => (
           <div key={s.label} className="rounded-2xl border border-border bg-surface p-4 shadow-card">
             <p className="text-2xl font-display font-semibold text-ink">{s.value}</p>
@@ -210,11 +218,11 @@ function MetricsTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <SystemAnalyticsChart pharmacies={pharmacies} pendingCount={verifications.length} />
-        <UnmetDemandClusterChart />
+        <SystemAnalyticsChart verified={stats.pharmaciesVerified} pending={stats.pharmaciesPending} unverified={stats.pharmaciesUnverified} />
+                {/* <UnmetDemandClusterChart /> */}
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+      {/* <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
         <h3 className="font-display font-semibold text-ink text-[15px] mb-3">System-wide unmet demand</h3>
         <div className="flex flex-col gap-2">
           {UNMET_DEMAND_CLUSTERS.map(c => (
@@ -224,7 +232,7 @@ function MetricsTab() {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -327,7 +335,7 @@ export default function AdminDashboard() {
       {activeTab === 'verification' && <VerificationTab />}
       {activeTab === 'medicines' && <MasterDataTab />}
       {activeTab === 'metrics' && <MetricsTab />}
-      {activeTab === 'audit-reports' && <AuditReportsTab />}
+      {/* {activeTab === 'audit-reports' && <AuditReportsTab />} */}
     </div>
   );
 }
