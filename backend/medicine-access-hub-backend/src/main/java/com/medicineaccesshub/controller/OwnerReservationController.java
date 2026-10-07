@@ -1,6 +1,7 @@
 package com.medicineaccesshub.controller;
 
 import com.medicineaccesshub.dto.response.ApiResponse;
+import com.medicineaccesshub.dto.response.DailyCountResponse;
 import com.medicineaccesshub.dto.response.ReservationResponse;
 import com.medicineaccesshub.entity.User;
 import com.medicineaccesshub.enums.ReservationStatus;
@@ -48,5 +49,12 @@ public class OwnerReservationController {
             @AuthenticationPrincipal User user, @PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("Reservation marked as collected",
                 reservationService.markCollected(user.getId(), id)));
+    }
+    @GetMapping("/daily")
+    public ResponseEntity<ApiResponse<List<DailyCountResponse>>> daily(
+            @AuthenticationPrincipal User user,
+            @RequestParam(defaultValue = "7") int days) {
+        return ResponseEntity.ok(ApiResponse.success("Daily reservation counts fetched",
+                reservationService.dailyCountsForMyPharmacy(user.getId(), days)));
     }
 }

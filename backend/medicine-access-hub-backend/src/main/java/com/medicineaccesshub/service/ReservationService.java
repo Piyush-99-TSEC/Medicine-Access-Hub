@@ -4,7 +4,7 @@ import com.medicineaccesshub.dto.request.ReservationCreateRequest;
 import com.medicineaccesshub.dto.response.ReservationResponse;
 import com.medicineaccesshub.dto.response.RouteResponse;
 import com.medicineaccesshub.enums.ReservationStatus;
-
+import com.medicineaccesshub.dto.response.DailyCountResponse;
 import java.util.List;
 
 public interface ReservationService {
@@ -30,4 +30,7 @@ public interface ReservationService {
 
     /** Road route to the pharmacy; only for the user's own CONFIRMED reservation. */
     RouteResponse getRoute(Long userId, Long reservationId, double lat, double lng);
+
+    /** Reservations created per day for the last {@code days} days (1 to 30), oldest first, zeros included. */
+    List<DailyCountResponse> dailyCountsForMyPharmacy(Long ownerUserId, int days);
 }

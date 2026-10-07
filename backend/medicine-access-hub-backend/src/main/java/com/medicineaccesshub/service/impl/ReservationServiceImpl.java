@@ -23,12 +23,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.medicineaccesshub.dto.response.RouteResponse;
 import com.medicineaccesshub.service.PythonService;
 import com.medicineaccesshub.repository.ReviewRepository;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.medicineaccesshub.dto.response.DailyCountResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -214,5 +218,19 @@ public class ReservationServiceImpl implements ReservationService {
 
     private void restoreStock(Reservation r) {
         inventoryRepository.restoreStock(r.getPharmacy().getId(), r.getMedicine().getId(), r.getQuantity());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DailyCountResponse> dailyCountsForMyPharmacy(Long ownerUserId, int days) {
+        int range = Math.min(Math.max(days, 1), 30);
+        Pharmacy pharmacy = requireMyPharmacy(ownerUserId);
+        LocalDate first = LocalDate.now().minusDays(range - 1L);
+
+        Map<LocalDate, Long> counts = reservationRepository.countPerDay(pharmacy.getId(), first.atStartOfDay()).stream()
+                .collect(Collectors.toMap(ReservationRepository.DayCount::getDay, ReservationRepository.DayCount::getTotal));
+        return first.datesUntil(LocalDate.now().plusDays(1))
+                .map(d -> new DailyCountResponse(d, counts.getOrDefault(d, 0L)))
+                .toList();
     }
 }

@@ -43,4 +43,15 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @Query("SELECT r FROM Reservation r JOIN FETCH r.pharmacy JOIN FETCH r.medicine " +
             "WHERE r.status = com.medicineaccesshub.enums.ReservationStatus.CONFIRMED AND r.pickupBy < :now")
     List<Reservation> findConfirmedPastPickup(@Param("now") LocalDateTime now);
+
+    interface DayCount {
+        java.time.LocalDate getDay();
+        Long getTotal();
+    }
+
+    /** Reservations created per day for one pharmacy (days with none are filled in by the service). */
+    @Query(value = "SELECT CAST(created_at AS date) AS day, COUNT(*) AS total FROM reservations " +
+            "WHERE pharmacy_id = :pharmacyId AND created_at >= :since " +
+            "GROUP BY CAST(created_at AS date)", nativeQuery = true)
+    List<DayCount> countPerDay(@Param("pharmacyId") Long pharmacyId, @Param("since") LocalDateTime since);
 }

@@ -87,7 +87,8 @@ export const ownerReservationApi = {
     api(`/api/v1/pharmacies/me/reservations${status ? `?status=${status}` : ''}`, { token }),
   accept: (id, token) => api(`/api/v1/pharmacies/me/reservations/${id}/accept`, { method: 'PATCH', token }),
   reject: (id, token) => api(`/api/v1/pharmacies/me/reservations/${id}/reject`, { method: 'PATCH', token }),
-  collect: (id, token) => api(`/api/v1/pharmacies/me/reservations/${id}/collect`, { method: 'PATCH', token })
+  collect: (id, token) => api(`/api/v1/pharmacies/me/reservations/${id}/collect`, { method: 'PATCH', token }),
+  daily: (days, token) => api(`/api/v1/pharmacies/me/reservations/daily?days=${days}`, { token })
 };
 
 export const reviewApi = {
