@@ -109,3 +109,15 @@ export const adminMedicineApi = {
 export const adminStatsApi = {
   get: token => api('/api/v1/admin/stats', { token })
 };
+
+export const ownerMedicineRequestApi = {
+  submit: (body, token) => api('/api/v1/pharmacies/me/medicine-requests', { method: 'POST', body, token }),
+  list: token => api('/api/v1/pharmacies/me/medicine-requests', { token })
+};
+
+export const adminMedicineRequestApi = {
+  list: (status, token) => api(`/api/v1/admin/medicine-requests${status ? `?status=${status}` : ''}`, { token }),
+  approve: (id, token) => api(`/api/v1/admin/medicine-requests/${id}/approve`, { method: 'PATCH', token }),
+  reject: (id, reason, token) =>
+    api(`/api/v1/admin/medicine-requests/${id}/reject`, { method: 'PATCH', body: { reason }, token })
+};

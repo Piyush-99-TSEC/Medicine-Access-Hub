@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pencil, Plus, Search } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
 import { adminMedicineApi } from '../../api/client.js';
+import MedicineRequestsPanel from './MedicineRequestsPanel.js';
 
 const EMPTY = {
   brandName: '', saltComposition: '', strength: '', dosageForm: '',
@@ -102,6 +103,8 @@ export default function MasterDataTab() {
   const rows = data?.content ?? [];
 
   return (
+    <>
+    <MedicineRequestsPanel onApproved={load} />
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <div className="relative max-w-sm flex-1">
@@ -169,5 +172,6 @@ export default function MasterDataTab() {
         />
       )}
     </div>
+    </>
   );
 }

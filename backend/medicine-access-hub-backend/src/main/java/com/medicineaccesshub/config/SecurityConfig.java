@@ -70,6 +70,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/pharmacies/me").hasAnyRole("PATIENT", "PHARMACY_OWNER")
                         .requestMatchers("/api/v1/pharmacies/me/inventory/**").hasRole("PHARMACY_OWNER")
                         .requestMatchers("/api/v1/pharmacies/me/reservations/**").hasRole("PHARMACY_OWNER")
+                        .requestMatchers("/api/v1/pharmacies/me/medicine-requests/**").hasRole("PHARMACY_OWNER")
                         .requestMatchers("/api/v1/reservations/**").hasRole("PATIENT")
                         .requestMatchers(HttpMethod.GET, "/api/v1/pharmacies/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/pharmacies/{id}/reviews").permitAll()

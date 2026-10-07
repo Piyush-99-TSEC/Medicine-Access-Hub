@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Boxes, ClipboardList, MapPinned, Check, X, Clock3, AlertTriangle, Search } from 'lucide-react';
 import InventoryTable from '../components/InventoryTable.js';
 import InventoryStockChart from '../components/InventoryStockChart.js';
 import SalesReservationChart from '../components/SalesReservationChart.js';
@@ -12,12 +11,15 @@ import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler } from 'chart.js';
 import { ownerInventoryApi, ownerReservationApi } from '../../api/client';
 import { pharmacyApi } from '../../api/client';
+import { Boxes, ClipboardList, MapPinned, Check, X, Clock3, AlertTriangle, Search, PackagePlus } from 'lucide-react';
+import MyMedicineRequests from '../components/MyMedicineRequests.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler);
 
 const TABS = [
   { key: 'inventory', label: 'Inventory', icon: Boxes },
   { key: 'reservations', label: 'Reservations', icon: ClipboardList },
+  { key: 'medicine-requests', label: 'Medicine Requests', icon: PackagePlus }
   // { key: 'unmet-demand', label: 'Unmet Demand', icon: MapPinned }
 ];
 const VALID_TABS = TABS.map(t => t.key);
@@ -479,6 +481,7 @@ export default function PharmacyDashboard() {
 
       {activeTab === 'inventory' && <InventoryTab pharmacyId={pharmacyId} />}
       {activeTab === 'reservations' && <ReservationRequests />}
+      {activeTab === 'medicine-requests' && <MyMedicineRequests />}
       {/* {activeTab === 'unmet-demand' && <UnmetDemandTab />} */}
     </div>
   );

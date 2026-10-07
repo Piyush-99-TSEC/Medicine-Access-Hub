@@ -129,6 +129,7 @@ import { useEffect, useState } from 'react';
 import { X, Search } from 'lucide-react';
 import { useApp } from '../../context/AppContext.js';
 import { medicineApi, ownerInventoryApi } from '../../api/client';
+import RequestMedicineModal from './RequestMedicineModal.js';
 
 const EMPTY_FORM = { quantity: '', price: '', expiryDate: '' };
 
@@ -143,6 +144,7 @@ export default function AddStockModal({ open, onClose, onSaved }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [requesting, setRequesting] = useState(false);
 
   // search the medicine catalogue 300ms after typing stops
   useEffect(() => {
@@ -224,6 +226,8 @@ export default function AddStockModal({ open, onClose, onSaved }) {
   }
 
   return (
+    <>
+    
     <div className="fixed inset-0 z-[1500] flex items-center justify-center bg-ink/40 p-4">
       <div className="w-full max-w-md rounded-2xl bg-surface shadow-card animate-fade-in">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
@@ -258,7 +262,12 @@ export default function AddStockModal({ open, onClose, onSaved }) {
                   <div className="mt-1 rounded-lg border border-border bg-surface max-h-52 overflow-y-auto">
                     {searching && <p className="px-3 py-2 text-xs text-ink-soft">Searching…</p>}
                     {!searching && results.length === 0 && (
-                      <p className="px-3 py-2 text-xs text-ink-soft">No medicine found.</p>
+                      <div className="px-3 py-2">
+                        <p className="text-xs text-ink-soft">No medicine found.</p>
+                        <button type="button" onClick={() => setRequesting(true)} className="mt-1 text-xs text-primary font-medium">
+                          Can't find it? Request this medicine
+                        </button>
+                      </div>
                     )}
                     {results.map(m => (
                       <button
@@ -329,5 +338,14 @@ export default function AddStockModal({ open, onClose, onSaved }) {
         </form>
       </div>
     </div>
+
+    {requesting && (
+        <RequestMedicineModal
+          initialName={query.trim()}
+          onClose={() => setRequesting(false)}
+          onDone={() => { setRequesting(false); handleClose(); }}
+        />
+      )}
+    </>
   );
 }
