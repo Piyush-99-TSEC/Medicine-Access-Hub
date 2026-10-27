@@ -302,7 +302,7 @@ import MedicineDetailModal from '../components/MedicineDetailModal.js';
 import PharmacyMap from '../../map/components/PharmacyMap.js';
 import Badge, { stockBadgeLabel, stockBadgeVariant } from '../../components/Badge.js';
 import PharmacyReviews from '../../reviews/components/PharmacyReviews.js';
-// import { useApp } from '../../context/AppContext.js';
+import { useApp } from '../../context/AppContext.js';
 import { useGeolocation } from '../../hooks/useGeolocation.js';
 // import {
 //   haversineKm,
@@ -327,7 +327,7 @@ export default function SearchResults() {
   // const { inventory, pharmacies } = useApp();
   const { location } = useGeolocation();
   const navigate = useNavigate();
-
+  const { currentUser } = useApp();
   const [query, setQuery] = useState('');
   const [radiusKm, setRadiusKm] = useState(5);
   const [activeMedicine, setActiveMedicine] = useState(null);
@@ -410,7 +410,7 @@ export default function SearchResults() {
     setAvailabilityLoading(true);
     setError('');
     medicineApi
-      .availability(activeMedicine.id, location.lat, location.lng, radiusKm)
+      .availability(activeMedicine.id, location.lat, location.lng, radiusKm, currentUser?.token)
       .then(rows => {
         if (!cancelled) setAvailability(rows);
       })
@@ -651,11 +651,11 @@ export default function SearchResults() {
                           <span className="flex items-center gap-1.5"><MapPinned size={13} /> {r.roadDistanceKm} km road distance</span>
                           <span className="flex items-center gap-1.5"><PackageCheck size={13} /> {r.quantity} units · ₹{r.price}/unit</span>
                           <span className="flex items-center gap-1.5"><Clock size={13} /> {r.isOpenNow ? 'Open now' : `${r.pharmacy.openTime}–${r.pharmacy.closeTime}`}</span>
-                          {r.updatedMinutesAgo != null && (
+                          {/* {r.updatedMinutesAgo != null && (
                             <span className={`flex items-center gap-1.5 ${r.updatedMinutesAgo >= 1440 ? 'text-warning' : ''}`}>
                               <Clock size={13} /> {freshness(r.updatedMinutesAgo)}{r.updatedMinutesAgo >= 1440 && ' · may be outdated'}
                             </span>
-                          )}
+                          )} */}
                         </div>
 
                         <div className="flex items-center justify-between mt-3.5 pt-3 border-t border-border">

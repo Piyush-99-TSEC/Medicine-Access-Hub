@@ -5,11 +5,11 @@ import InventoryStockChart from '../components/InventoryStockChart.js';
 import SalesReservationChart from '../components/SalesReservationChart.js';
 import UnmetDemandHeatmap from '../components/UnmetDemandHeatmap.js';
 import { useApp } from '../../context/AppContext.js';
-import { MEDICINES, MEDICINE_SEARCH_DEMAND, UNMET_DEMAND_CLUSTERS, UNMET_DEMAND_TREND } from '../../mock/mockData';
+// import { MEDICINES, MEDICINE_SEARCH_DEMAND, UNMET_DEMAND_CLUSTERS, UNMET_DEMAND_TREND } from '../../mock/mockData';
+import { ownerInventoryApi, ownerReservationApi, demandApi } from '../../api/client';
 import Badge, { stockBadgeLabel, stockBadgeVariant } from '../../components/Badge.js';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler } from 'chart.js';
-import { ownerInventoryApi, ownerReservationApi } from '../../api/client';
 import { pharmacyApi } from '../../api/client';
 import { Boxes, ClipboardList, MapPinned, Check, X, Clock3, AlertTriangle, Search, PackagePlus } from 'lucide-react';
 import MyMedicineRequests from '../components/MyMedicineRequests.js';
@@ -19,8 +19,8 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 const TABS = [
   { key: 'inventory', label: 'Inventory', icon: Boxes },
   { key: 'reservations', label: 'Reservations', icon: ClipboardList },
-  { key: 'medicine-requests', label: 'Medicine Requests', icon: PackagePlus }
-  // { key: 'unmet-demand', label: 'Unmet Demand', icon: MapPinned }
+  { key: 'medicine-requests', label: 'Medicine Requests', icon: PackagePlus },
+  { key: 'unmet-demand', label: 'Unmet Demand', icon: MapPinned }
 ];
 const VALID_TABS = TABS.map(t => t.key);
 
@@ -369,20 +369,25 @@ function ReservationRequests() {
 }
 
 function UnmetDemandTab() {
-  const failedSearches = UNMET_DEMAND_CLUSTERS.reduce((s, c) => s + c.searchCount, 0);
-  const affectedUsers = UNMET_DEMAND_CLUSTERS.reduce((s, c) => s + c.distinctUsers, 0);
-  const highPriority = UNMET_DEMAND_CLUSTERS.filter(c => c.searchCount >= 20).length;
-  const top5 = [...UNMET_DEMAND_CLUSTERS].sort((a, b) => b.searchCount - a.searchCount).slice(0, 5);
+  const { currentUser } = useApp();
+  const [clusters, setClusters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const trendData = {
-    labels: UNMET_DEMAND_TREND.map(d => d.day),
-    datasets: [{ label: 'Failed searches', data: UNMET_DEMAND_TREND.map(d => d.count), borderColor: '#DC2626', backgroundColor: 'rgba(220,38,38,0.1)', fill: true, tension: 0.35, pointRadius: 3 }]
-  };
-  const trendOptions = {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0F172A', padding: 10, cornerRadius: 8 } },
-    scales: { x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#64748B' } }, y: { beginAtZero: true, grid: { color: '#E2E8F0' }, ticks: { font: { size: 11 }, color: '#64748B' } } }
-  };
+  useEffect(() => {
+    demandApi.owner(currentUser?.token)
+      .then(setClusters)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [currentUser?.token]);
+
+  const failedSearches = clusters.reduce((s, c) => s + c.searchCount, 0);
+  const affectedUsers = clusters.reduce((s, c) => s + c.distinctUsers, 0);
+  const highPriority = clusters.filter(c => c.searchCount >= 20).length;
+  const top5 = clusters.slice(0, 5);
+
+  if (loading) return <p className="text-sm text-ink-soft">Loading unmet demand...</p>;
+  if (error) return <p className="text-sm text-danger">{error}</p>;
 
   return (
     <div className="flex flex-col gap-5">
@@ -391,28 +396,22 @@ function UnmetDemandTab() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SummaryCard label="Failed Searches" value={failedSearches} />
         <SummaryCard label="Affected Users" value={affectedUsers} />
-        <SummaryCard label="Demand Clusters" value={UNMET_DEMAND_CLUSTERS.length} />
+        <SummaryCard label="Demand Clusters" value={clusters.length} />
         <SummaryCard label="High Priority" value={highPriority} tone="danger" />
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-        <h3 className="font-display font-semibold text-ink text-[15px] mb-3">7-Day Failed Search Trend</h3>
-        <div className="h-56"><Line data={trendData} options={trendOptions} /></div>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
-        <h3 className="font-display font-semibold text-ink text-[15px] mb-3">Top 5 Unavailable Medicines</h3>
+      
         <div className="flex flex-col gap-2">
+          {top5.length === 0 && <p className="text-xs text-ink-soft">No unmet demand clusters in the last 7 days.</p>}
           {top5.map((c, i) => (
-            <div key={c.id} className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0">
-              <span className="flex items-center gap-2"><Badge variant="primary">#{i + 1}</Badge><span className="font-medium text-ink">{c.medicineName}</span></span>
-              <span className="text-ink-soft text-xs">{c.searchCount} searches · {c.distinctUsers} users · {c.nearestPharmacyKm}km to nearest stock</span>
+            <div key={`${c.medicineId}-${c.centroidLat}`} className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0">
+              <span className="flex items-center gap-2"><Badge variant="primary">#{i + 1}</Badge><span className="font-medium text-ink">{c.medicineName} <span className="text-ink-soft text-xs font-normal">({c.centroidLat.toFixed(4)}, {c.centroidLng.toFixed(4)})</span></span></span>
+              <span className="text-ink-soft text-xs">{c.searchCount} searches · {c.distinctUsers} users · {c.gapKm == null ? 'no stock nearby' : `${c.gapKm} km to nearest stock`}</span>
             </div>
           ))}
         </div>
-      </div>
 
-      <UnmetDemandHeatmap />
+      <UnmetDemandHeatmap clusters={clusters} />
     </div>
   );
 }
@@ -482,7 +481,7 @@ export default function PharmacyDashboard() {
       {activeTab === 'inventory' && <InventoryTab pharmacyId={pharmacyId} />}
       {activeTab === 'reservations' && <ReservationRequests />}
       {activeTab === 'medicine-requests' && <MyMedicineRequests />}
-      {/* {activeTab === 'unmet-demand' && <UnmetDemandTab />} */}
+      {activeTab === 'unmet-demand' && <UnmetDemandTab />}
     </div>
   );
 }

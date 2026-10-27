@@ -5,6 +5,7 @@ from app.ocr.router import router as ocr_router
 from app import health
 from app.ranking.router import router as rank_router 
 from app.routing.router import router as route_router
+from app.demand.router import router as demand_router
 
 app = FastAPI()
 app.include_router(search_router)
@@ -12,6 +13,7 @@ app.include_router(ocr_router)
 app.include_router(health.router)
 app.include_router(rank_router)
 app.include_router(route_router)
+app.include_router(demand_router)
 
 @app.on_event("startup")
 def startup():

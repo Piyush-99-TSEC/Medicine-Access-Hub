@@ -1,10 +1,13 @@
 package com.medicineaccesshub.controller;
 
 import com.medicineaccesshub.dto.response.*;
+import com.medicineaccesshub.entity.User;
 import com.medicineaccesshub.service.InventoryService;
 import com.medicineaccesshub.service.MedicineService;
+import com.medicineaccesshub.service.SearchLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +29,7 @@ public class MedicineController {
 
     private final MedicineService medicineService;
     private final InventoryService inventoryService;
+    private final SearchLogService searchLogService;
 
 
     @GetMapping
@@ -42,15 +46,18 @@ public class MedicineController {
         return ResponseEntity.ok(ApiResponse.success("Medicine fetched successfully",
                 medicineService.getById(id)));
     }
-    
+
+    // Public endpoint: user is null for guests (no token). Every search is logged for unmet demand mapping.
     @GetMapping("/{id}/availability")
     public ResponseEntity<ApiResponse<List<PharmacyAvailabilityResponse>>> availability(
+            @AuthenticationPrincipal User user,
             @PathVariable Long id,
             @RequestParam double lat,
             @RequestParam double lng,
             @RequestParam(defaultValue = "5") double radiusKm) {
-        return ResponseEntity.ok(ApiResponse.success("Availability fetched successfully",
-                inventoryService.findAvailability(id, lat, lng, radiusKm)));
+        List<PharmacyAvailabilityResponse> result = inventoryService.findAvailability(id, lat, lng, radiusKm);
+        searchLogService.record(user == null ? null : user.getId(), id, lat, lng, !result.isEmpty());
+        return ResponseEntity.ok(ApiResponse.success("Availability fetched successfully", result));
     }
 
     // Strip / box photo -> top matching medicines for the patient to confirm.

@@ -57,8 +57,8 @@ export const medicineApi = {
   search: (q, page = 0, size = 20) =>
     api(`/api/v1/medicines?q=${encodeURIComponent(q)}&page=${page}&size=${size}`),
   getById: id => api(`/api/v1/medicines/${id}`),
-  availability: (id, lat, lng, radiusKm) =>
-    api(`/api/v1/medicines/${id}/availability?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`),
+    availability: (id, lat, lng, radiusKm, token) =>
+    api(`/api/v1/medicines/${id}/availability?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`, { token }),
   scan: (file, token) => {
     const form = new FormData();
     form.append('file', file);
@@ -132,3 +132,7 @@ export const bulkInventoryApi = {
     api(`/api/v1/pharmacies/me/inventory/bulk?dryRun=${dryRun}`, { method: 'POST', body: { rows }, token })
 };
 
+export const demandApi = {
+  owner: token => api('/api/v1/pharmacies/me/demand', { token }),
+  admin: token => api('/api/v1/admin/demand', { token })
+};

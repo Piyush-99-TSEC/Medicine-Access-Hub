@@ -1,5 +1,5 @@
 import { MapContainer, TileLayer, Circle, Popup } from 'react-leaflet';
-import { UNMET_DEMAND_CLUSTERS, USER_LOCATION } from '../../mock/mockData';
+// import { UNMET_DEMAND_CLUSTERS, USER_LOCATION } from '../../mock/mockData';
 
 function intensityColor(searchCount) {
   if (searchCount >= 30) return '#DC2626';
@@ -7,22 +7,26 @@ function intensityColor(searchCount) {
   return '#4F46E5';
 }
 
-export default function UnmetDemandHeatmap() {
+export default function UnmetDemandHeatmap({ clusters = [] }) {
+  const center = clusters.length ? [clusters[0].centroidLat, clusters[0].centroidLng] : [19.08, 72.84];
+
   return (
     <div className="rounded-2xl overflow-hidden border border-border shadow-card relative h-[420px]">
-      <MapContainer center={[USER_LOCATION.lat, USER_LOCATION.lng]} zoom={12} scrollWheelZoom={false} style={{ height: '100%' }}>
+      <MapContainer center={center} zoom={13} scrollWheelZoom={false} style={{ height: '100%' }}>
         <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        {UNMET_DEMAND_CLUSTERS.map(c => (
+        {clusters.map(c => (
           <Circle
-            key={c.id}
-            center={[c.centroid.lat, c.centroid.lng]}
-            radius={c.radiusMeters * (c.searchCount / 10)}
+            key={`${c.medicineId}-${c.centroidLat}-${c.centroidLng}`}
+            center={[c.centroidLat, c.centroidLng]}
+            radius={500}
             pathOptions={{ color: intensityColor(c.searchCount), fillColor: intensityColor(c.searchCount), fillOpacity: 0.3, weight: 1.5 }}
           >
             <Popup>
               <p className="text-sm font-medium">{c.medicineName}</p>
               <p className="text-xs text-ink-soft">{c.searchCount} failed searches · {c.distinctUsers} affected users</p>
-              <p className="text-xs text-ink-soft">Nearest available stock: {c.nearestPharmacyKm} km away</p>
+              <p className="text-xs text-ink-soft">
+                {c.gapKm == null ? 'No pharmacy stocks this' : `Nearest stock: ${c.gapKm} km by road`}
+              </p>
             </Popup>
           </Circle>
         ))}

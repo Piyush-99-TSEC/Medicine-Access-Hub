@@ -149,4 +149,9 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
             "WHERE i.pharmacy.id = :pharmacyId AND i.medicine.id IN :medicineIds")
     List<Inventory> findByPharmacyAndMedicines(@Param("pharmacyId") Long pharmacyId,
                                                @Param("medicineIds") Collection<Long> medicineIds);
+
+    /** Verified pharmacies holding stock of any of these medicines (feeds gap_km in unmet demand). */
+    @Query("SELECT i FROM Inventory i JOIN FETCH i.pharmacy p " +
+            "WHERE i.quantity > 0 AND p.isVerified = true AND i.medicine.id IN :medicineIds")
+    List<Inventory> findStockists(@Param("medicineIds") Collection<Long> medicineIds);
 }

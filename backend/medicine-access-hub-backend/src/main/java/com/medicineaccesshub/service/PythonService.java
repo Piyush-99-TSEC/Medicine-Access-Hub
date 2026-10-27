@@ -27,4 +27,7 @@ public interface PythonService {
 
     /** Prescription photo: one entry per medicine line, each with candidate medicines. */
     Optional<Map<String, Object>> prescription(byte[] image, String filename);
+
+    /** DBSCAN clusters of failed searches: {clusters:[...], noiseCount}. Each search {medicineId, userId, lat, lng}, each stockist {medicineId, pharmacyId, lat, lng}. */
+    Optional<Map<String, Object>> demandClusters(List<Map<String, Object>> searches, List<Map<String, Object>> stockists);
 }

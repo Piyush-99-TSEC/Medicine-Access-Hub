@@ -5,10 +5,10 @@ import PharmacyVerificationCard from '../components/PharmacyVerificationCard.js'
 import SystemAnalyticsChart from '../components/SystemAnalyticsChart.js';
 import UnmetDemandClusterChart from '../components/UnmetDemandClusterChart.js';
 import { useApp } from '../../context/AppContext.js';
-import { MEDICINES, UNMET_DEMAND_CLUSTERS, ADMIN_ACTIVITY_LOG, ADMIN_REPORTS } from '../../mock/mockData';
+// import { MEDICINES, UNMET_DEMAND_CLUSTERS, ADMIN_ACTIVITY_LOG, ADMIN_REPORTS } from '../../mock/mockData';
 import Badge from '../../components/Badge.js';
 import MasterDataTab from '../components/MasterDataTab.js';
-import { adminPharmacyApi, adminStatsApi } from '../../api/client.js';
+import { adminPharmacyApi, adminStatsApi, demandApi } from '../../api/client.js';
 
 const TABS = [
   { key: 'verification', label: 'Pharmacy Verification', icon: ShieldCheck },
@@ -112,21 +112,21 @@ function VerificationTab() {
       </div>
 
        <div>
-        <h2 className="font-display font-semibold text-ink text-[15px] mb-3">Pending Verification ({pending.length})</h2>
-        {!loading && pending.length === 0 && (
+        {/* <h2 className="font-display font-semibold text-ink text-[15px] mb-3">Pending Verification ({pending.length})</h2> */}
+        {/* {!loading && pending.length === 0 && (
           <div className="rounded-xl border border-dashed border-border p-6 text-sm text-ink-soft text-center">
             No pharmacies awaiting verification.
           </div>
-        )}
+        )} */}
         <div className="flex flex-col gap-3">
-          {pending.map(p => (
+          {/* {pending.map(p => (
             <PharmacyVerificationCard
               key={p.id}
               pharmacy={p}
               onApprove={() => decide(p.id, true)}
               onReject={() => decide(p.id, false)}
             />
-          ))}
+          ))} */}
           <div>
             <h2 className="font-display font-semibold text-ink text-[15px] mb-3">Rejected Pharmacies ({rejected.length})</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -193,6 +193,11 @@ function MetricsTab() {
   const { currentUser } = useApp();
   const [stats, setStats] = useState(null);
   const [error, setError] = useState('');
+  const [clusters, setClusters] = useState([]);
+
+  useEffect(() => {
+    demandApi.admin(currentUser?.token).then(setClusters).catch(() => setClusters([]));
+  }, [currentUser?.token]);
 
   useEffect(() => {
     adminStatsApi.get(currentUser?.token).then(setStats).catch(err => setError(err.message));
@@ -219,7 +224,22 @@ function MetricsTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SystemAnalyticsChart verified={stats.pharmaciesVerified} pending={stats.pharmaciesPending} unverified={stats.pharmaciesUnverified} />
-                {/* <UnmetDemandClusterChart /> */}
+                <UnmetDemandClusterChart clusters={clusters}  />
+      </div>
+
+      <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">
+        <h3 className="font-display font-semibold text-ink text-[15px] mb-3">System-wide unmet demand</h3>
+        <div className="flex flex-col gap-2">
+          {clusters.length === 0 && <p className="text-xs text-ink-soft">No unmet demand clusters in the last 7 days.</p>}
+          {clusters.map(c => (
+            <div key={`${c.medicineId}-${c.centroidLat}-${c.centroidLng}`} className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0">
+              <span className="text-ink font-medium">{c.medicineName} <span className="text-ink-soft text-xs font-normal">({c.centroidLat.toFixed(4)}, {c.centroidLng.toFixed(4)})</span></span>
+              <span className="text-ink-soft text-xs">
+                {c.searchCount} failed searches · {c.distinctUsers} users · {c.gapKm == null ? 'no stock nearby' : `${c.gapKm} km to nearest stock`}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* <div className="rounded-2xl border border-border bg-surface p-4 shadow-card">

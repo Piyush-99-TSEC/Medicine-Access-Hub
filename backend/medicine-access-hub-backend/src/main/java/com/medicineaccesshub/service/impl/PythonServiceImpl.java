@@ -147,4 +147,18 @@ public class PythonServiceImpl implements PythonService {
             log.warn("Python /reload failed: {}", e.getMessage());
         }
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Optional<Map<String, Object>> demandClusters(List<Map<String, Object>> searches, List<Map<String, Object>> stockists) {
+        try {
+            Map<String, Object> res = ocrClient.post().uri("/demand/clusters")
+                    .body(Map.of("searches", searches, "stockists", stockists))
+                    .retrieve().body(Map.class);
+            return Optional.ofNullable(res);
+        } catch (Exception e) {
+            log.warn("Python /demand/clusters failed: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
 }
